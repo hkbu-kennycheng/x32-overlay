@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>rust@gentoo.org</email>
+		<name>Gentoo Rust Project</name>
+	</maintainer>
+	<longdescription lang="en">
+		Systems programming language from Mozilla. This binary package provides
+		prebuilt rustc, cargo and the standard library for the x32 ABI
+		(x86_64-unknown-linux-gnux32) in addition to the native amd64 targets.
+	</longdescription>
+	<use>
+		<flag name="rust-src">Install rustc source code (used for code completion and building rustc from source)</flag>
+		<flag name="rustfmt">Install rustfmt, Rust code formatter</flag>
+		<flag name="rust-analyzer">Install rust-analyzer, an experimental language server for Rust</flag>
+		<flag name="clippy">Install clippy, Rust lints</flag>
+		<flag name="prefix">Makes a prefix installation independent of host locations (use with care)</flag>
+	</use>
+	<stabilize-allarches/>
+</pkgmetadata>

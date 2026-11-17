@@ -89,8 +89,8 @@ src_configure() {
 	export ZSTD_SYS_USE_PKG_CONFIG=1
 
 	# Export x32 cross-compilation env (CARGO_BUILD_TARGET etc.);
-	# no-op on non-x32 ABIs. Must run before cargo_src_configure so the
-	# cargo config picks up the x32 target.
+	# no-op on non-x32 ABIs. Must run before cargo_src_configure so
+	# the cargo config picks up the x32 target.
 	x32_rust_export_env
 
 	# https://github.com/rust-lang/stacker/issues/79
@@ -123,14 +123,11 @@ _maturin_cargo_bin_dir() {
 }
 
 python_compile_all() {
-	# we build the Rust executable (just once) via cargo_src_compile
 	cargo_src_compile
 
-	# Documentation build requires mdbook; skip when cross-compiling
-	# (the x32 host is native, so this runs on x32 hosts as well).
-	if ! tc-is-cross-compiler; then
-		use !doc || mdbook build -d "${T}"/html guide || die
+	use !doc || mdbook build -d "${T}"/html guide || die
 
+	if ! tc-is-cross-compiler; then
 		local maturin=$(_maturin_cargo_bin_dir)/maturin
 		"${maturin}" completions bash > "${T}"/${PN} || die
 		"${maturin}" completions fish > "${T}"/${PN}.fish || die
@@ -187,7 +184,6 @@ python_test() {
 }
 
 python_install_all() {
-	# Install the maturin binary that was built by cargo
 	dobin "$(_maturin_cargo_bin_dir)"/maturin
 
 	dodoc Changelog.md README.md

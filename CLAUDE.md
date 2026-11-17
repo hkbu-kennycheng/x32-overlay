@@ -34,27 +34,28 @@ profiles/x32/               # x32 profile: eapi, package.mask/, package.use/, pa
 
 - `package.mask/` — masks: `>x11-themes/adwaita-icon-theme-3.32.0`, `<dev-lang/ruby-3.3.0`
 - `package.use/` — keyword-specific USE flags (cairo/libglvnd `X`, freetype `harfbuzz`, libaom SIMD off)
-- `patches/` — x32 user patches in `eapply_user` layout: `patches/<category>/<pkg-version>/x32.patch`. Version-agnostic symlinks (e.g. `app-misc/jq` -> `jq-1.8.2`) keep minor `::gentoo` bumps working. Current patch set (2026-11):
+- `patches/` — x32 user patches in `eapply_user` layout: `patches/<category>/<pkg-version>/x32.patch`. A directory exists for **every** non-live version of each patched package carried by `::gentoo` (no version-agnostic `${PN}` symlinks). Release revisions (`gtk-4.20.4-r1`, `gdb-17.2-r1`) map to the base-version dir via `${P%-r*}`. Current patch set (2026-11):
 
-  | Patch dir | Fix |
+  | Patch dirs | Fix |
   |---|---|
   | `app-misc/jq-1.8.2` | `_FILE_OFFSET_BITS`/`_TIME_BITS` 64 on ILP32 (guarded by `!__ILP32__`) |
-  | `dev-lang/ruby-3.3.13`, `ruby-3.4.12` | force `ucontext` coroutine backend on x32 (ebuild forces `amd64`) |
-  | `dev-build/b2-5.6.1` | add `libx32` to gcc lib path, `-mx32` for 32-bit ELF x86 |
-  | `dev-util/android-tools-35.0.2` (fipsmodule), `-36.0.1` (crypto/rand) | x32 `getrandom` syscall number (`0x40000000 + 318`) |
-  | `gui-libs/gtk-4.18.6`, `gtk-4.20.4`, `gtk-4.22.5` | disable roaring `x64` SIMD path on `__ILP32__` |
-  | `llvm-runtimes/openmp-23.1.5` | x32 (ILP32) runtime support; full port of the former 22.1.8 patch |
-  | `net-libs/webkit-gtk-2.54.2` | drop `WTF_CPU_X86_64`, mark `WTF_CPU_UNKNOWN` on `ELF X32` |
-  | `dev-debug/gdb-17.2` | skip `si_addr_bnd` fields on x32 (`!__ILP32__`) |
+  | `dev-lang/ruby-3.2.11-r1`, `ruby-3.3.13`, `ruby-3.4.12` | force `ucontext` coroutine backend on x32 (ebuild forces `amd64`) |
+  | `dev-build/b2-5.4.2-r1`, `b2-5.5.3`, `b2-5.6.1` | add `libx32` to gcc lib path, `-mx32` for 32-bit ELF x86 (paths relative to `${S}` = `.../src`) |
+  | `dev-util/android-tools-35.0.2` (fipsmodule path), `-36.0.1` (crypto/rand path) | x32 `getrandom` syscall number (`0x40000000 + 318`) |
+  | `gui-libs/gtk-4.18.6`, `gtk-4.20.4`, `gtk-4.22.5` | disable roaring `x64` SIMD path on `__ILP32__` (applies to `-r1` builds) |
+  | `llvm-runtimes/openmp-20.1.8`, `21.1.8`, `22.1.8`, `23.1.5` | x32 (ILP32) runtime support; one patch per upstream LLVM release (file layout differs: `runtime/cmake/...` up to 21.x, `cmake/modules/...` from 22.x) |
+  | `net-libs/webkit-gtk-2.48.5`, `2.52.6`, `2.54.0`, `2.54.2` | drop `WTF_CPU_X86_64`, mark `WTF_CPU_UNKNOWN` on `ELF X32` |
+  | `dev-debug/gdb-16.3`, `17.1`, `17.2`, `18.1` | skip `si_addr_bnd` fields on x32 (`!__ILP32__`) |
 
   `dev-libs/boost` needs no patch: upstream ≥1.80 ships `X86_64/SYSV/X32` context aliases in `libs/context/build/Jamfile.v2`.
 - `profile.bashrc`:
-  - `pre_src_prepare` applies `${CATEGORY}/${P}` and `${CATEGORY}/${PN}`
-    patches directly when `/etc/portage/patches` does not resolve to the
-    overlay patch tree (eapply_user covers that case). Idempotent: a
-    per-`${PF}` marker in `${T}` guards against the double invocation caused
-    by nested `src_prepare` chains, and `realpath` dedup handles
-    `${PN}`-symlink-to-`${P}` collisions.
+  - `pre_src_prepare` applies `${CATEGORY}/${P}` (plus the ${P%-r*}
+    base-version fallback) patches directly when `/etc/portage/patches`
+    does not resolve to the overlay patch tree; otherwise `eapply_user`
+    inside src_prepare applies them. Idempotent: a per-`${PF}` marker in
+    `${T}` guards against the repeated invocation caused by nested
+    `src_prepare` chains, and `realpath` dedup avoids applying the same
+    directory twice.
   - `post_src_prepare` initializes a transient git repo in `${S}` when
     `X32_GIT_PATCH=1` for rapid patch creation (`git diff` against pristine
     sources).

@@ -130,16 +130,13 @@ src_prepare() {
 	x32_rust_patch_ring_vendor
 }
 
-python_configure_all() {
-	filter-lto # bug #903908
-}
-
 python_compile() {
 	if x32_rust_is_x32; then
 		x32_rust_export_env
 		DISTUTILS_ARGS=( --target "${X32_RUST_TARGET}" )
-		# Per-impl wheel dir: ${T} is shared across python implementations, so a
-		# single dir would make the glob pick up wheels built for earlier impls.
+		# Per-impl wheel dir: ${T} is shared across python implementations,
+		# so a single dir would make the glob pick up wheels built for
+		# earlier impls.
 		local wheel_dir="${T}/wheels-${EPYTHON}"
 		maturin pep517 build-wheel -i ${EPYTHON} --compatibility off \
 			--target "${X32_RUST_TARGET}" \
@@ -155,6 +152,10 @@ python_compile() {
 	else
 		distutils-r1_python_compile
 	fi
+}
+
+python_configure_all() {
+	filter-lto # bug #903908
 }
 
 python_test() {

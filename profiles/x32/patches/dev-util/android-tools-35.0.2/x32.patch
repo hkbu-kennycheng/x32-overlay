@@ -1,5 +1,5 @@
 --- a/vendor/boringssl/crypto/fipsmodule/rand/getrandom_fillin.h	2024-08-29 17:46:57.000000000 -0000
-+++ b/vendor/boringssl/crypto/fipsmodule/rand/getrandom_fillin.h	2026-11-17 04:22:20.799623892 -0000
+--- b/vendor/boringssl/crypto/fipsmodule/rand/getrandom_fillin.h	2026-11-17 11:04:09.334150948 -0000
 @@ -23,7 +23,11 @@
  #include <sys/syscall.h>
  

@@ -78,9 +78,10 @@ Notes:
   skips it with an `ewarn` (the native pass installs the full toolchain).
 - The cryptography wheel dir is per-impl (`${T}/wheels-${EPYTHON}`) because
   abi3 wheels from earlier impls in a shared dir would collide on install.
-- `profiles/x32/package.mask/maturin` masks upstream `dev-util/maturin-1.15.0`
-  (no x32 ring patches) so dependency chains resolve to the patched overlay
-  version.
+- The `maturin`/`cargo-c` package masks were dropped: the overlay now carries
+  x32 ebuilds for every upstream version (maturin 1.15.0 + 1.16.0,
+  cargo-c 0.10.16 + 0.10.26), so dependency chains resolve to the patched
+  overlay ebuilds without masking.
 
 ## Phase 2 verification (2026-11-17, `x32-dev-verify` container on stage4:x32-systemd)
 
@@ -106,13 +107,17 @@ and `gentoo-x32-docker`) provide:
   the ebuild's default `eapply_user` sees nothing; the hook applies the patch
   manually, guarded by a per-`${PF}` marker file in `${T}` so the nested
   `src_prepare` chain cannot double-apply it (verified on jq).
-- **Version-agnostic symlinks**: `dev-lang/ruby -> ruby-3.4.12` delivers the
-  coroutine fix to both `ruby-3.3.13` and `ruby-4.0.9`; verified by
-  `ebuild ... unpack prepare` applying the patch into `configure.ac`.
-- **OpenMP**: `llvm-runtimes/openmp -> openmp-23.1.5` carries the x32 runtime
-  patch (ILP32 support in `kmp_platform.h`, `-mx32` in
-  `LibompHandleFlags.cmake`, `x86_64_x32` arch in `runtime/CMakeLists.txt`).
-  Verified: `ebuild openmp-23.1.5.ebuild unpack prepare` applies it cleanly.
+- **Per-version patch dirs**: every non-live version of each patched package
+  in `::gentoo` has its own `patches/<category>/<version>/x32.patch`
+  (`jq`, `ruby`, `b2`, `android-tools`, `gtk`, `openmp`, `webkit-gtk`, `gdb`).
+  The hook also falls back to `${P%-r*}` so release revisions
+  (`gtk-4.20.4-r1`, `gdb-17.2-r1`, ...) pick up the base version's patch.
+  Verified with `ebuild ... unpack prepare` for: `jq-1.8.2`, `b2-5.4.2-r1`,
+  `b2-5.5.3`, `b2-5.6.1`, `android-tools-35.0.2`/`36.0.1`,
+  `gtk-4.18.6-r1`/`4.20.4-r1`/`4.22.5-r1`,
+  `gdb-16.3`/`17.1`/`17.2-r1`/`18.1-r2`, `ruby-3.2.11-r1`/`3.3.13`/`3.4.12`,
+  `openmp-20.1.8`/`21.1.8`/`22.1.8`/`23.1.5`, `webkit-gtk-2.54.2-r400`.
+  Full builds succeeded for `openmp-22.1.8` and `openmp-23.1.5`.
 - **`X32_GIT_PATCH=1`** creates a baseline commit (`x32 baseline <PF>`) in a
   transient git repo inside `${S}` for `git diff`-based patch development
   (verified on jq).

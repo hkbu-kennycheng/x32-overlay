@@ -20,11 +20,16 @@ elif [[ ${PV} == *beta* ]]; then
 		rust-src? ( ${RUST_TOOLCHAIN_BASEURL%/}/rust-src-beta.tar.xz -> rust-src-${PV}.tar.xz )
 	"
 else
-	# curl -s static.rust-lang.org/dist/channel-rust-${PV}.toml | grep "xz_url.*rust-src"
+	# curl -Ls static.rust-lang.org/dist/channel-rust-${PV}.toml | grep "xz_url.*rust-src"
 	SRC_URI="$(rust_all_arch_uris "rust-${PV}")
 		rust-src? ( ${RUST_TOOLCHAIN_BASEURL%/}/2026-10-01/rust-src-${PV}.tar.xz )
+		rustc-dev? ( $(rust_all_arch_uris "rustc-dev-${PV}") )
+		rust_sysroots_aarch64_unknown_none? (
+			$(rust_arch_uri aarch64-unknown-none "rust-std-${PV}")
+			$(rust_arch_uri aarch64-unknown-none-softfloat "rust-std-${PV}")
+		)
 	"
-	KEYWORDS="amd64 arm arm64 ~loong ~mips ppc ppc64 ~riscv ~s390 ~sparc x86"
+	KEYWORDS="~amd64 ~arm ~arm64 ~loong ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86"
 fi
 
 GENTOO_BIN_BASEURI="https://github.com/projg2/rust-bootstrap/releases/download/${PVR}" # omit trailing slash
@@ -56,7 +61,11 @@ fi
 
 LICENSE="|| ( MIT Apache-2.0 ) BSD BSD-1 BSD-2 BSD-4"
 SLOT="${PV%%_*}" # Beta releases get to share the same SLOT as the eventual stable
-IUSE="big-endian +clippy cpu_flags_x86_sse2 doc prefix rust-analyzer rust-src +rustfmt"
+IUSE="
+	big-endian +clippy cpu_flags_x86_sse2
+	doc prefix rust-analyzer rust-src rustc-dev
+	rust_sysroots_aarch64_unknown_none +rustfmt
+"
 
 # net-misc/curl is needed for our own bootstrapped rustc, since cross-compiling bundled curl is not supported
 RDEPEND="
@@ -120,13 +129,47 @@ src_unpack() {
 			tar -xf "${WORKDIR}/rust-src-${PV}.tar.xz" || die "Failed to unpack nightly rust-src tarball"
 		fi
 
-		local v rust_target fetched=()
+		local v
 		for v in $(multilib_get_enabled_abi_pairs); do
-			rust_target="$(rust_abi $(get_abi_CHOST ${v##*.}))"
-			# x32 has no rust target of its own; rust_abi maps it to
-			# x86_64-unknown-linux-gnu. Skip duplicates.
-			[[ " ${fetched[*]} " == *" ${rust_target} "* ]] && continue
-			fetched+=( "${rust_target}" )
+			rust_target="$(rust_abi $(get_abi_CHOST ${ABI}))"
+
+			if use rustc-dev; then
+				local rustc_dev_url=$(
+					grep "xz_url.*rustc-dev-nightly-${rust_target}" \
+						"${WORKDIR}/channel-rust-nightly.toml" | cut -d '"' -f 2
+				)
+				einfo "Fetching nightly rustc-dev for ${rust_target} ..."
+				curl --progress-bar -L "${rustc_dev_url}" -O || \
+					die "Failed to fetch nightly rustc-dev"
+
+				if use verify-sig; then
+					curl --progress-bar -L "${rustc_dev_url}.asc" -O || \
+						die "Failed to fetch nightly rustc-dev signature"
+					verify-sig_verify_detached "${WORKDIR}/rustc-dev-nightly-${rust_target}.tar.xz" \
+						"${WORKDIR}/rustc-dev-nightly-${rust_target}.tar.xz.asc"
+				fi
+				tar -xf "${WORKDIR}/rustc-dev-nightly-${rust_target}.tar.xz" || \
+					die "Failed to unpack nightly rustc-dev"
+			fi
+			if use rust_sysroots_aarch64_unknown_none; then
+				for rust_std_target in aarch64-unknown-none aarch64-unknown-none-softfloat; do
+					local rust_std_url=$(
+						grep -m 1 "xz_url.*rust-std-nightly-${rust_std_target}\\.tar\\.xz\"" \
+							"${WORKDIR}/channel-rust-nightly.toml" | cut -d '"' -f 2
+					)
+					einfo "Using nightly Rust std for ${rust_std_target} from ${rust_std_url}"
+					curl --progress-bar -L "${rust_std_url}" -O || \
+						die "Failed to fetch nightly rust-std tarball for ${rust_std_target}"
+					if use verify-sig; then
+						curl --progress-bar -L "${rust_std_url}.asc" -O || \
+							die "Failed to fetch nightly rust-std signature for ${rust_std_target}"
+						verify-sig_verify_detached "${WORKDIR}/rust-std-nightly-${rust_std_target}.tar.xz" \
+							"${WORKDIR}/rust-std-nightly-${rust_std_target}.tar.xz.asc"
+					fi
+					tar -xf "${WORKDIR}/rust-std-nightly-${rust_std_target}.tar.xz" || \
+						die "Failed to unpack nightly rust-std tarball for ${rust_std_target}"
+				done
+			fi
 			rust_bin_url=$(grep "xz_url.*rust-nightly-${rust_target}" "${WORKDIR}/channel-rust-nightly.toml" | cut -d '"' -f 2)
 			einfo "Using nightly Rust from ${rust_bin_url} for ${rust_target}"
 
@@ -143,7 +186,8 @@ src_unpack() {
 		done
 	else
 		# sadly rust-src tarball does not have corresponding .asc file
-		# so do partial verification
+		# so do partial verification for the remaining distfiles, including
+		# rustc-dev and the aarch64-unknown-none softfloat std tarballs.
 		if use verify-sig; then
 			for f in ${A}; do
 				if [[ -f ${DISTDIR}/${f}.asc ]]; then
@@ -155,27 +199,29 @@ src_unpack() {
 		default_src_unpack
 	fi
 
-	# x32 ABI has no rust toolchain tarball of its own; the x86_64-unknown-linux-gnu
-	# toolchain is reused for it (x32 std is provided as a target, see
-	# rust_native_abi_install / multilib_src_install).
-	# Use cp (not mv) since every ABI needs its own copy under ${S}.
+	# We only want to do this for the native ABI. Non-native ABIs are
+	# handled differently in multilib_src_install.
+	# x32 ABI has no rust toolchain tarball of its own; the
+	# x86_64-unknown-linux-gnu toolchain is reused for it (x32 std is
+	# provided as an extra target). Use cp (not mv) since every ABI
+	# needs its own copy under ${S}.
 	case ${PV} in
 		*9999*)
-			if [[ "${ABI}" != x32 ]]; then
+			if [[ ${ABI} != x32 ]]; then
 				cp -p -R --reflink=auto "${WORKDIR}/rust-nightly-$(rust_abi)" "${S}" || die
 			else
 				cp -p -R --reflink=auto "${WORKDIR}/rust-nightly-x86_64-unknown-linux-gnu" "${S}" || die
 			fi
 			;;
 		*beta*)
-			if [[ "${ABI}" != x32 ]]; then
+			if [[ ${ABI} != x32 ]]; then
 				cp -p -R --reflink=auto "${WORKDIR}/rust-beta-$(rust_abi)" "${S}" || die
 			else
 				cp -p -R --reflink=auto "${WORKDIR}/rust-beta-x86_64-unknown-linux-gnu" "${S}" || die
 			fi
 			;;
 		*)
-			if [[ "${ABI}" != x32 ]]; then
+			if [[ ${ABI} != x32 ]]; then
 				cp -p -R --reflink=auto "${WORKDIR}/rust-${PV}-$(rust_abi)" "${S}" || die
 			else
 				cp -p -R --reflink=auto "${WORKDIR}/rust-${PV}-x86_64-unknown-linux-gnu" "${S}" || die
@@ -333,11 +379,10 @@ multilib_src_install() {
 				;;
 		esac
 		rust_target="$(rust_abi $(get_abi_CHOST ${ABI}))"
-		# Standalone rust-std tarball layout (e.g. x86_64-unknown-linux-gnux32,
-		# which has no full toolchain tarball): install it next to the native
-		# toolchain in the same /opt/rust-bin-${SLOT} tree.
+		# Standalone rust-std tarball layout (x86_64-unknown-linux-gnux32
+		# has no full toolchain tarball of its own).
 		local std_dir="${WORKDIR}/rust-std-${version}-${rust_target}/rust-std-${rust_target}/lib/rustlib/${rust_target}"
-		# Full toolchain tarball layout (upstream rust_all_arch_uris tarballs).
+		# Full toolchain tarball layout (upstream rust_all_arch_uris).
 		local full_dir="${WORKDIR}/rust-${version}-${rust_target}/rust-std-${rust_target}/lib/rustlib/${rust_target}"
 		if [[ -d ${std_dir} ]]; then
 			dodir "/opt/rust-bin-${SLOT}/lib/rustlib"
@@ -346,19 +391,32 @@ multilib_src_install() {
 			dodir "/opt/rust-bin-${SLOT}/lib/rustlib"
 			cp -vr "${full_dir}" "${ED}/opt/rust-bin-${SLOT}/lib/rustlib" || die
 		elif use abi_x86_x32; then
-			# rust_native_abi_install() already installed
-			# rust-std-x86_64-unknown-linux-gnux32 into
-			# /opt/rust-bin-${SLOT}/lib/rustlib during the native ABI
-			# pass, and SRC_URI provides no other std tarballs, so
-			# there is nothing to install for the remaining ABIs.
+			# The native ABI pass already installed rust-std-x86_64-unknown-
+			# linux-gnux32; nothing else is provided for this ABI.
 			einfo "No standalone rust-std tarball for ${rust_target}; std provided by native ABI pass"
 		else
 			ewarn "No rust-std tarball available for target ${rust_target}; skipping ABI ${ABI}"
 		fi
 	fi
 
+	if use rust_sysroots_aarch64_unknown_none; then
+		local rust_std_dir rust_std_target
+		for rust_std_target in aarch64-unknown-none aarch64-unknown-none-softfloat; do
+			for rust_std_dir in \
+				"${WORKDIR}/rust-std-${PV}-${rust_std_target}" \
+				"${WORKDIR}/rust-std-nightly-${rust_std_target}"; do
+				if [[ -d "${rust_std_dir}/rust-std-${rust_std_target}/lib/rustlib/${rust_std_target}" ]]; then
+					cp -vr \
+					"${rust_std_dir}/rust-std-${rust_std_target}/lib/rustlib/${rust_std_target}" \
+					"${ED}/opt/${P}/lib/rustlib" || die
+					break
+				fi
+			done
+		done
+	fi
+
 	# BUG: installs x86_64 binary on other arches
-	rm -f "${ED}"/opt/rust-bin-"${SLOT}"/lib/rustlib/*/bin/rust-llvm-dwp || die
+	rm -f "${ED}/opt/${P}/lib/rustlib/"*/bin/rust-llvm-dwp || die
 }
 
 pkg_postinst() {

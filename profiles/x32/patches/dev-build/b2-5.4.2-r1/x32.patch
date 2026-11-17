@@ -1,0 +1,20 @@
+--- a/tools/gcc.jam	2025-12-21 20:10:43.000000000 -0000
++++ b/tools/gcc.jam	2026-11-17 11:03:36.835797651 -0000
+@@ -231,7 +231,7 @@
+         # right onces. Note that we do not provide a clean way to build a 32-bit
+         # binary using a 64-bit compiler, but user can always pass -m32
+         # manually.
+-        local lib_path = $(root)/bin $(root)/lib $(root)/lib32 $(root)/lib64 ;
++        local lib_path = $(root)/bin $(root)/lib $(root)/lib32 $(root)/lib64 $(root)/libx32 ;
+         if $(.debug-configuration)
+         {
+             ECHO "notice:" using gcc libraries "::" $(condition) "::" $(lib_path) ;
+@@ -387,7 +387,7 @@
+     compile-link-flags <target-os>$(generic-os)/<architecture>s390x/<address-model>32 : -m31 ;
+     compile-link-flags <target-os>$(generic-os)/<architecture>s390x/<address-model>64 : -m64 ;
+     local arch = power sparc x86 ;
+-    compile-link-flags <target-os>$(generic-os)/<architecture>$(arch)/<address-model>32 : -m32 ;
++    compile-link-flags <target-os>$(generic-os)/<architecture>$(arch)/<address-model>32 : -mx32 ;
+     compile-link-flags <target-os>$(generic-os)/<architecture>$(arch)/<address-model>64 : -m64 ;
+ }
+ 

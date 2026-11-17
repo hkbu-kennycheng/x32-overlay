@@ -57,9 +57,9 @@ src_configure() {
 	export PKG_CONFIG_ALLOW_CROSS=1
 
 	# Export x32 cross-compilation env (CARGO_BUILD_TARGET etc.);
-	# no-op on non-x32 ABIs. Without this, cargo compiles
-	# for the default x86_64-unknown-linux-gnu target while the
-	# x32 host's cc supplies ELF32-x86-64 CRT objects, and linking
-	# fails with "is incompatible with elf32-x86-64".
+	# no-op on non-x32 ABIs. Without this, cargo compiles for the
+	# default x86_64-unknown-linux-gnu target while the x32 host's cc
+	# supplies ELF32-x86-64 CRT objects, and linking fails with
+	# "is incompatible with elf32-x86-64".
 	x32_rust_export_env
 }

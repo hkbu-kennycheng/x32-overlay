@@ -11,7 +11,7 @@ CRATES="
 RUST_MIN_VER="1.92.0"
 RUST_MULTILIB=1
 
-inherit cargo gnome2 meson-multilib python-any-r1 rust-toolchain toolchain-funcs vala x32-rust
+inherit cargo gnome2 meson-multilib python-any-r1 rust-toolchain x32-rust toolchain-funcs vala
 
 DESCRIPTION="Scalable Vector Graphics (SVG) rendering library"
 HOMEPAGE="https://wiki.gnome.org/Projects/LibRsvg https://gitlab.gnome.org/GNOME/librsvg"
@@ -25,7 +25,7 @@ LICENSE+="
 "
 
 SLOT="2"
-KEYWORDS="amd64 arm arm64 ~loong ~mips ppc ppc64 ~riscv ~s390 ~sparc x86"
+KEYWORDS="amd64 arm ~arm64 ~loong ppc ppc64 ~riscv ~s390 ~sparc ~x86"
 
 IUSE="abi_x86_x32 abi_x86_64 avif gtk-doc +introspection test +vala"
 RESTRICT="!test? ( test )"
@@ -98,8 +98,8 @@ multilib_src_configure() {
 			-Dtriplet="$(rust_abi)"
 		)
 	elif x32_rust_is_x32; then
-		# On an x32 host the x32 ABI is the native one, so the branch above
-		# does not fire; pass the x32 rust target explicitly.
+		# On an x32 host the x32 ABI is the native one, so the branch
+		# above does not fire; pass the x32 rust target explicitly.
 		emesonargs+=(
 			-Dtriplet="${X32_RUST_TARGET}"
 		)

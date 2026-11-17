@@ -1,0 +1,6 @@
+# Upstream cargo-c has no x32 (ILP32) fixes: without CARGO_BUILD_TARGET set
+# to the x32 triple, cargo builds ELF64 objects that the x32 host linker
+# rejects ("is incompatible with elf32-x86-64").
+# The overlay provides a patched 0.10.16; mask newer upstream releases
+# (0.10.17+) until the x32 fixes are ported forward.
+>=dev-util/cargo-c-0.10.17

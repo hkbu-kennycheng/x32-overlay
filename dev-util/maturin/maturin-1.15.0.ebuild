@@ -88,16 +88,41 @@ src_configure() {
 	export OPENSSL_NO_VENDOR=1
 	export ZSTD_SYS_USE_PKG_CONFIG=1
 
+	# Export x32 cross-compilation env (CARGO_BUILD_TARGET etc.);
+	# no-op on non-x32 ABIs. Must run before cargo_src_configure so the
+	# cargo config picks up the x32 target.
+	x32_rust_export_env
+
 	# https://github.com/rust-lang/stacker/issues/79
 	use s390 && ! is-flagq '-march=*' &&
 		append-cflags $(test-flags-CC -march=z10)
+
+	local myfeatures=(
+		# like release.yml + native-tls for better platform support than rustls
+		full
+		password-storage
+		$(usev ssl native-tls)
+	)
+
+	cargo_src_configure --no-default-features
+}
+
+# Path to the cargo target directory for the built maturin binary.
+# cargo_target_dir() appends the rust triple only for cross-compile or
+# non-native multilib ABIs; on an x32-native host neither applies, yet
+# x32_rust_export_env sets CARGO_BUILD_TARGET=x86_64-unknown-linux-gnux32,
+# so cargo places the binary under target/<triple>/release. cargo.eclass
+# does not set CARGO_TARGET_DIR, so a relative path (anchored at ${S})
+# is correct here, same as cargo_target_dir().
+_maturin_cargo_bin_dir() {
+	if x32_rust_is_x32; then
+		echo "${CARGO_TARGET_DIR:-target}/${X32_RUST_TARGET}/$(usex debug debug release)"
+	else
+		cargo_target_dir
+	fi
 }
 
 python_compile_all() {
-	# Export x32 cross-compilation env (CARGO_BUILD_TARGET etc.);
-	# no-op on non-x32 ABIs.
-	x32_rust_export_env
-
 	# we build the Rust executable (just once) via cargo_src_compile
 	cargo_src_compile
 
@@ -106,7 +131,7 @@ python_compile_all() {
 	if ! tc-is-cross-compiler; then
 		use !doc || mdbook build -d "${T}"/html guide || die
 
-		local maturin=$(cargo_target_dir)/maturin
+		local maturin=$(_maturin_cargo_bin_dir)/maturin
 		"${maturin}" completions bash > "${T}"/${PN} || die
 		"${maturin}" completions fish > "${T}"/${PN}.fish || die
 		"${maturin}" completions zsh > "${T}"/_${PN} || die
@@ -130,18 +155,23 @@ python_test() {
 		errors::pyo3_no_extension_module
 		# fails for unsupported rust targets, non-issue here (bug #973104)
 		errors::pypi_compatibility_linux_tag
-		# unimportant tests that require uv, and not obvious to get it
-		# to work with network-sandbox (not worth the trouble)
+		# minor tests that require pip or uv, and are a hassle with sandbox
+		develop::develop_pip_cases::case_01_pyo3_pure
+		develop::develop_pip_cases::case_12_pyo3_pure_with_dependency_group
 		develop::develop_uv_cases::case_1_hello_world
 		develop::develop_uv_cases::case_2_pyo3_ffi_pure
-		# compliance tests using zig (if present) need old libc (bug #946967)
+		develop::develop_uv_cases::case_3_pyo3_pure_with_dependency_group
+		# compliance tests that require a old glibc (bug #946967,#982570)
 		integration::integration_cases::case_07_cffi_mixed_py_subdir
 		integration::integration_cases::case_16_pyo3_stub_generation_zig
+		integration::integration_cases::case_16_pyo3_stub_generation_pure_zig
 		# avoid need for wasm over a single hello world test
 		integration::integration_wasm_hello_world
 		# these currently attempt to install tomli regardless of python version
 		pep517::pep517_default_profile
 		pep517::pep517_editable_profile
+		# has troublesome requirements and is unimportant for us
+		pgo::pgo_pyo3_mixed
 		# unimportant and simpler to skip, does not work with just `git init`
 		sdist::lib_with_parent_workspace_git_dep_sdist
 	)
@@ -158,7 +188,7 @@ python_test() {
 
 python_install_all() {
 	# Install the maturin binary that was built by cargo
-	dobin "$(cargo_target_dir)"/maturin
+	dobin "$(_maturin_cargo_bin_dir)"/maturin
 
 	dodoc Changelog.md README.md
 	use doc && dodoc -r "${T}"/html

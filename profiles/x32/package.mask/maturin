@@ -1,4 +1,6 @@
 # Upstream maturin has no x32 (ILP32) fixes for its vendored ring crate.
 # Force dependency chains (e.g. dev-python/cryptography) to resolve to the
 # patched dev-util/maturin from this overlay.
->=dev-util/maturin-1.15.0
+# The overlay provides a patched 1.15.0; mask newer upstream releases
+# (1.16.0+) until the x32 fixes are ported forward.
+>=dev-util/maturin-1.16.0

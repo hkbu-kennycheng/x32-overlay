@@ -14,33 +14,33 @@ RUST_MIN_VER="1.83.0"
 CRATES="
 	asn1@0.24.1
 	asn1_derive@0.24.1
-	base64@0.22.1
-	bitflags@2.13.0
-	cc@1.2.64
+	base64@0.23.0
+	bitflags@2.13.1
+	cc@1.4.0
 	cfg-if@1.0.4
 	find-msvc-tools@0.1.9
 	foreign-types-shared@0.1.1
 	foreign-types@0.3.2
 	heck@0.5.0
 	itoa@1.0.18
-	libc@0.2.186
+	libc@0.2.189
 	once_cell@1.21.4
 	openssl-macros@0.1.1
 	openssl-sys@0.9.117
 	openssl@0.10.81
-	pem@3.0.6
+	pem@4.0.0
 	pkg-config@0.3.33
-	portable-atomic@1.13.1
-	proc-macro2@1.0.106
-	pyo3-build-config@0.29.0
-	pyo3-ffi@0.29.0
-	pyo3-macros-backend@0.29.0
-	pyo3-macros@0.29.0
-	pyo3@0.29.0
-	quote@1.0.45
-	self_cell@1.2.2
+	portable-atomic@1.14.0
+	proc-macro2@1.0.107
+	pyo3-build-config@0.29.2
+	pyo3-ffi@0.29.2
+	pyo3-macros-backend@0.29.2
+	pyo3-macros@0.29.2
+	pyo3@0.29.2
+	quote@1.0.47
+	self_cell@1.3.0
 	shlex@2.0.1
-	syn@2.0.117
+	syn@2.0.119
 	target-lexicon@0.13.5
 	unicode-ident@1.0.24
 	vcpkg@0.2.15
@@ -83,7 +83,7 @@ DEPEND="
 
 BDEPEND="
 	${RUST_DEPEND}
-	>=dev-util/maturin-1.9.4
+	>=dev-util/maturin-1.9.4[${PYTHON_USEDEP}]
 	dev-python/setuptools[${PYTHON_USEDEP}]
 	test? (
 		dev-python/certifi[${PYTHON_USEDEP}]
@@ -124,6 +124,10 @@ src_prepare() {
 		sed -i -e 's/__builtin_available(macOS 10\.12, \*)/'"${darwinok}"'/' \
 			src/_cffi_src/openssl/src/osrandom_engine.c || die
 	fi
+
+	# Patch vendored ring crate for x32 (ILP32) compatibility;
+	# no-op on non-x32 builds.
+	x32_rust_patch_ring_vendor
 }
 
 python_configure_all() {

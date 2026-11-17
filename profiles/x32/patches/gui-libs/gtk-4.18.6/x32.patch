@@ -1,0 +1,11 @@
+--- a/gtk/roaring/roaring.h	2025-06-09 20:44:13.000000000 -0000
++++ b/gtk/roaring/roaring.h	2026-11-17 04:22:41.175267829 -0000
+@@ -106,7 +106,7 @@
+ #define USESSE4
+ #endif
+ 
+-#if defined(USEAVX) || defined(__x86_64__) || defined(_M_X64)
++#if (defined(USEAVX) || defined(__x86_64__) || defined(_M_X64)) && !defined(__ILP32__)
+ // we have an x64 processor
+ #define IS_X64
+ // we include the intrinsic header

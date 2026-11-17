@@ -1,6 +1,6 @@
---- a/gdb/nat/amd64-linux-siginfo.c
-+++ b/gdb/nat/amd64-linux-siginfo.c
-@@ -277,8 +277,10 @@
+--- a/gdb/nat/amd64-linux-siginfo.c	2026-05-10 14:32:31.000000000 -0000
++++ b/gdb/nat/amd64-linux-siginfo.c	2026-11-17 04:13:17.043590701 -0000
+@@ -276,8 +276,10 @@
  #define cpt_si_ptr _sifields._rt._sigval.sival_ptr
  #define cpt_si_addr _sifields._sigfault._addr
  #define cpt_si_addr_lsb _sifields._sigfault._addr_lsb
@@ -11,7 +11,7 @@
  #define cpt_si_band _sifields._sigpoll._band
  #define cpt_si_fd _sifields._sigpoll._fd
  
-@@ -336,8 +336,10 @@
+@@ -336,8 +338,10 @@
  	   && to->si_signo == SIGSEGV)
      {
        to->cpt_si_addr = from_ptrace.cpt_si_addr;
@@ -20,5 +20,5 @@
        to->cpt_si_upper = from_ptrace.cpt_si_upper;
 +#endif
      }
+ #endif
    else if (to->si_code < 0)
-     {

@@ -1,0 +1,13 @@
+--- a/gtk/roaring/roaring.h	2026-09-10 02:33:20.000000000 -0000
++++ b/gtk/roaring/roaring.h	2026-11-17 04:12:48.941668652 -0000
+@@ -108,7 +108,10 @@
+ 
+ #if defined(__x86_64__) || defined(_M_X64)
+ // we have an x64 processor
++// Exclude x32 ABI (ILP32) where pointers are 32-bit but the ISA is x86-64
++#if !defined(__ILP32__)
+ #define CROARING_IS_X64 1
++#endif
+ 
+ #if defined(_MSC_VER) && (_MSC_VER < 1910)
+ // Old visual studio systems won't support AVX2 well.

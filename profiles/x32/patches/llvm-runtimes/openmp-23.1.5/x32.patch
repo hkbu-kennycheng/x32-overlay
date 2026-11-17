@@ -1,23 +1,23 @@
-diff -ruN a/openmp/cmake/modules/LibompHandleFlags.cmake b/openmp/cmake/modules/LibompHandleFlags.cmake
---- a/openmp/cmake/modules/LibompHandleFlags.cmake	2026-06-16 06:33:53.000000000 +0800
-+++ b/openmp/cmake/modules/LibompHandleFlags.cmake	2026-07-11 09:00:53.125318006 +0800
+diff -ruN om-orig/llvm-project-23.1.5.src/openmp/cmake/modules/LibompHandleFlags.cmake om-final/llvm-project-23.1.5.src/openmp/cmake/modules/LibompHandleFlags.cmake
+--- a/openmp/cmake/modules/LibompHandleFlags.cmake	2026-11-02 10:45:15.000000000 -0000
++++ b/openmp/cmake/modules/LibompHandleFlags.cmake	2026-11-17 04:18:02.922569280 -0000
 @@ -60,13 +60,17 @@
      libomp_append(flags_local -Qinline-min-size=1 LIBOMP_HAVE_INLINE_MIN_SIZE_FLAG)
    endif()
    # Architectural C and C++ flags
 -  if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-+  if(${X32})
++  if(X32)
 +    libomp_append(flags_local -mx32 LIBOMP_HAVE_M32_FLAG)
 +  elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
      libomp_append(flags_local -m32 LIBOMP_HAVE_M32_FLAG)
    endif()
-   if(${IA32})
+   if(IA32)
      libomp_append(flags_local /arch:SSE2 LIBOMP_HAVE_ARCH_SSE2_FLAG)
      libomp_append(flags_local -msse2 LIBOMP_HAVE_MSSE2_FLAG)
      libomp_append(flags_local -falign-stack=maintain-16-byte LIBOMP_HAVE_FALIGN_STACK_FLAG)
-+  elseif(${X32})
++  elseif(X32)
 +    libomp_append(flags_local -msse2 LIBOMP_HAVE_MSSE2_FLAG)
-   elseif(${MIC})
+   elseif(MIC)
      libomp_append(flags_local -mmic LIBOMP_HAVE_MMIC_FLAG)
      libomp_append(flags_local -ftls-model=initial-exec LIBOMP_HAVE_FTLS_MODEL_FLAG)
 @@ -81,12 +85,16 @@
@@ -25,17 +25,17 @@ diff -ruN a/openmp/cmake/modules/LibompHandleFlags.cmake b/openmp/cmake/modules/
    set(asmflags_local)
    # Architectural assembler flags
 -  if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-+  if(${X32})
++  if(X32)
 +    libomp_append(asmflags_local -mx32 LIBOMP_HAVE_M32_FLAG)
 +  elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
      libomp_append(asmflags_local -m32 LIBOMP_HAVE_M32_FLAG)
    endif()
-   if(${IA32})
+   if(IA32)
      libomp_append(asmflags_local /safeseh LIBOMP_HAVE_SAFESEH_MASM_FLAG)
      libomp_append(asmflags_local /coff LIBOMP_HAVE_COFF_MASM_FLAG)
-+  elseif(${X32})
++  elseif(X32)
 +    libomp_append(asmflags_local -msse2 LIBOMP_HAVE_MSSE2_FLAG)
-   elseif(${MIC})
+   elseif(MIC)
      libomp_append(asmflags_local -mmic LIBOMP_HAVE_MMIC_FLAG)
    endif()
 @@ -117,11 +125,15 @@
@@ -43,31 +43,31 @@ diff -ruN a/openmp/cmake/modules/LibompHandleFlags.cmake b/openmp/cmake/modules/
    libomp_append(ldflags_local /SAFESEH LIBOMP_HAVE_SAFESEH_FLAG)
    # Architectural linker flags
 -  if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-+  if(${X32})
++  if(X32)
 +    libomp_append(ldflags_local -mx32 LIBOMP_HAVE_M32_FLAG)
 +  elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
      libomp_append(ldflags_local -m32 LIBOMP_HAVE_M32_FLAG)
    endif()
-   if(${IA32})
+   if(IA32)
      libomp_append(ldflags_local -msse2 LIBOMP_HAVE_MSSE2_FLAG)
-+  elseif(${X32})
++  elseif(X32)
 +    libomp_append(ldflags_local -msse2 LIBOMP_HAVE_MSSE2_FLAG)
-   elseif(${MIC})
+   elseif(MIC)
      libomp_append(ldflags_local -mmic LIBOMP_HAVE_MMIC_FLAG)
      libomp_append(ldflags_local -Wl,-x LIBOMP_HAVE_X_FLAG)
-diff -ruN a/openmp/runtime/CMakeLists.txt b/openmp/runtime/CMakeLists.txt
---- a/openmp/runtime/CMakeLists.txt	2026-06-16 06:33:53.000000000 +0800
-+++ b/openmp/runtime/CMakeLists.txt	2026-07-11 09:00:53.145318252 +0800
-@@ -91,7 +91,7 @@
-   endif()
+diff -ruN om-orig/llvm-project-23.1.5.src/openmp/runtime/CMakeLists.txt om-final/llvm-project-23.1.5.src/openmp/runtime/CMakeLists.txt
+--- a/openmp/runtime/CMakeLists.txt	2026-11-02 10:45:15.000000000 -0000
++++ b/openmp/runtime/CMakeLists.txt	2026-11-17 04:18:02.922569280 -0000
+@@ -86,7 +86,7 @@
+   include(arm64x)
  endif()
  
--libomp_check_variable(LIBOMP_ARCH 32e x86_64 32 i386 arm ppc ppc64 ppc64le aarch64 aarch64_32 aarch64_a64fx mic mips mips64 riscv64 loongarch64 ve s390x sparc sparcv9 wasm32)
-+libomp_check_variable(LIBOMP_ARCH 32e x86_64_x32 x86_64 32 i386 arm ppc ppc64 ppc64le aarch64 aarch64_32 aarch64_a64fx mic mips mips64 riscv64 loongarch64 ve s390x sparc sparcv9 wasm32)
+-libomp_check_variable(LIBOMP_ARCH 32e x86_64 32 i386 arm ppc ppc64 ppc64le aarch64 aarch64_32 aarch64_a64fx arm64ec mic mips mips64 riscv64 loongarch64 ve s390x sparc sparcv9 wasm32)
++libomp_check_variable(LIBOMP_ARCH 32e x86_64_x32 x86_64 32 i386 arm ppc ppc64 ppc64le aarch64 aarch64_32 aarch64_a64fx arm64ec mic mips mips64 riscv64 loongarch64 ve s390x sparc sparcv9 wasm32)
  
  set(LIBOMP_LIB_TYPE normal CACHE STRING
    "Performance,Profiling,Stubs library (normal/profile/stubs)")
-@@ -168,6 +168,7 @@
+@@ -167,6 +167,7 @@
  # Architecture
  set(IA32 FALSE)
  set(INTEL64 FALSE)
@@ -75,7 +75,7 @@ diff -ruN a/openmp/runtime/CMakeLists.txt b/openmp/runtime/CMakeLists.txt
  set(ARM FALSE)
  set(AARCH64 FALSE)
  set(AARCH64_32 FALSE)
-@@ -190,6 +191,8 @@
+@@ -189,6 +190,8 @@
    set(IA32 TRUE)
  elseif("${LIBOMP_ARCH}" STREQUAL "x86_64" OR "${LIBOMP_ARCH}" STREQUAL "32e") # Intel(R) 64 architecture
    set(INTEL64 TRUE)
@@ -84,9 +84,9 @@ diff -ruN a/openmp/runtime/CMakeLists.txt b/openmp/runtime/CMakeLists.txt
  elseif("${LIBOMP_ARCH}" STREQUAL "arm") # ARM architecture
    set(ARM TRUE)
  elseif("${LIBOMP_ARCH}" STREQUAL "ppc") # PPC32 architecture
-diff -ruN a/openmp/runtime/cmake/LibompDefinitions.cmake b/openmp/runtime/cmake/LibompDefinitions.cmake
---- a/openmp/runtime/cmake/LibompDefinitions.cmake	2026-06-16 06:33:53.000000000 +0800
-+++ b/openmp/runtime/cmake/LibompDefinitions.cmake	2026-07-11 09:00:53.131984756 +0800
+diff -ruN om-orig/llvm-project-23.1.5.src/openmp/runtime/cmake/LibompDefinitions.cmake om-final/llvm-project-23.1.5.src/openmp/runtime/cmake/LibompDefinitions.cmake
+--- a/openmp/runtime/cmake/LibompDefinitions.cmake	2026-11-02 10:45:15.000000000 -0000
++++ b/openmp/runtime/cmake/LibompDefinitions.cmake	2026-11-17 04:18:02.895903952 -0000
 @@ -32,6 +32,12 @@
      libomp_append(cppflags_local "-D LIBOMP_HAVE_PTHREAD_SET_NAME_NP" LIBOMP_HAVE_PTHREAD_SET_NAME_NP)
    endif()
@@ -100,12 +100,12 @@ diff -ruN a/openmp/runtime/cmake/LibompDefinitions.cmake b/openmp/runtime/cmake/
    # CMake doesn't include CPPFLAGS from environment, but we will.
    set(${cppflags} ${cppflags_local} ${LIBOMP_CPPFLAGS} $ENV{CPPFLAGS} PARENT_SCOPE)
  endfunction()
-diff -ruN a/openmp/runtime/cmake/LibompGetArchitecture.cmake b/openmp/runtime/cmake/LibompGetArchitecture.cmake
---- a/openmp/runtime/cmake/LibompGetArchitecture.cmake	2026-06-16 06:33:53.000000000 +0800
-+++ b/openmp/runtime/cmake/LibompGetArchitecture.cmake	2026-07-11 09:00:53.131984756 +0800
-@@ -18,7 +18,11 @@
-     #if defined(__KNC__)
-       #error ARCHITECTURE=mic
+diff -ruN om-orig/llvm-project-23.1.5.src/openmp/runtime/cmake/LibompGetArchitecture.cmake om-final/llvm-project-23.1.5.src/openmp/runtime/cmake/LibompGetArchitecture.cmake
+--- a/openmp/runtime/cmake/LibompGetArchitecture.cmake	2026-11-02 10:45:15.000000000 -0000
++++ b/openmp/runtime/cmake/LibompGetArchitecture.cmake	2026-11-17 04:18:02.895903952 -0000
+@@ -21,7 +21,11 @@
+     #elif defined(_M_ARM64EC) || defined(__arm64ec__)
+       #error ARCHITECTURE=arm64ec
      #elif defined(__amd64__) || defined(__amd64) || defined(__x86_64__) || defined(__x86_64) || defined(_M_X64) || defined(_M_AMD64)
 +    #if defined(__ILP32__)
 +      #error ARCHITECTURE=x86_64_x32
@@ -115,12 +115,12 @@ diff -ruN a/openmp/runtime/cmake/LibompGetArchitecture.cmake b/openmp/runtime/cm
      #elif defined(__i386) || defined(__i386__) || defined(__IA32__) || defined(_M_I86) || defined(_M_IX86) || defined(__X86__) || defined(_X86_)
        #error ARCHITECTURE=i386
      #elif defined(__ARM_ARCH_7__) || defined(__ARM_ARCH_7R__) ||  defined(__ARM_ARCH_7A__) || defined(__ARM_ARCH_7M__)  || defined(__ARM_ARCH_7S__)
-diff -ruN a/openmp/runtime/cmake/LibompMicroTests.cmake b/openmp/runtime/cmake/LibompMicroTests.cmake
---- a/openmp/runtime/cmake/LibompMicroTests.cmake	2026-06-16 06:33:53.000000000 +0800
-+++ b/openmp/runtime/cmake/LibompMicroTests.cmake	2026-07-11 09:00:53.131984756 +0800
+diff -ruN om-orig/llvm-project-23.1.5.src/openmp/runtime/cmake/LibompMicroTests.cmake om-final/llvm-project-23.1.5.src/openmp/runtime/cmake/LibompMicroTests.cmake
+--- a/openmp/runtime/cmake/LibompMicroTests.cmake	2026-11-02 10:45:15.000000000 -0000
++++ b/openmp/runtime/cmake/LibompMicroTests.cmake	2026-11-17 04:18:02.895903952 -0000
 @@ -74,6 +74,8 @@
    libomp_append(libomp_test_touch_libs "${CMAKE_THREAD_LIBS_INIT}")
-   if(${IA32})
+   if(IA32)
      libomp_append(libomp_test_touch_cflags -m32 LIBOMP_HAVE_M32_FLAG)
 +  elseif(${X32})
 +    libomp_append(libomp_test_touch_cflags -mx32 LIBOMP_HAVE_M32_FLAG)
@@ -137,13 +137,13 @@ diff -ruN a/openmp/runtime/cmake/LibompMicroTests.cmake b/openmp/runtime/cmake/L
 +      libomp_append(libomp_expected_library_deps libpthread.so.0)
 +      libomp_append(libomp_expected_library_deps libm.so.6)
 +      libomp_append(libomp_expected_library_deps librt.so.1)
-     elseif(${ARM})
+     elseif(ARM)
        libomp_append(libomp_expected_library_deps libc.so.6)
        libomp_append(libomp_expected_library_deps libffi.so.6)
-diff -ruN a/openmp/runtime/cmake/config-ix.cmake b/openmp/runtime/cmake/config-ix.cmake
---- a/openmp/runtime/cmake/config-ix.cmake	2026-06-16 06:33:53.000000000 +0800
-+++ b/openmp/runtime/cmake/config-ix.cmake	2026-07-11 09:00:53.131984756 +0800
-@@ -168,7 +168,7 @@
+diff -ruN om-orig/llvm-project-23.1.5.src/openmp/runtime/cmake/config-ix.cmake om-final/llvm-project-23.1.5.src/openmp/runtime/cmake/config-ix.cmake
+--- a/openmp/runtime/cmake/config-ix.cmake	2026-11-02 10:45:15.000000000 -0000
++++ b/openmp/runtime/cmake/config-ix.cmake	2026-11-17 04:18:02.922569280 -0000
+@@ -169,7 +169,7 @@
  endif()
  
  # Checking for x86-specific waitpkg and rtm attribute and intrinsics
@@ -152,16 +152,16 @@ diff -ruN a/openmp/runtime/cmake/config-ix.cmake b/openmp/runtime/cmake/config-i
    check_include_file(immintrin.h LIBOMP_HAVE_IMMINTRIN_H)
    if (NOT LIBOMP_HAVE_IMMINTRIN_H)
      check_include_file(intrin.h LIBOMP_HAVE_INTRIN_H)
-@@ -246,7 +246,7 @@
+@@ -247,7 +247,7 @@
  endif()
  
  # Check if adaptive locks are available
--if((${IA32} OR ${INTEL64}) AND NOT MSVC)
-+if((${IA32} OR ${INTEL64} OR ${X32}) AND NOT MSVC)
+-if((IA32 OR INTEL64) AND NOT MSVC)
++if((IA32 OR INTEL64 OR X32) AND NOT MSVC)
    set(LIBOMP_HAVE_ADAPTIVE_LOCKS TRUE)
  else()
    set(LIBOMP_HAVE_ADAPTIVE_LOCKS FALSE)
-@@ -304,6 +304,7 @@
+@@ -305,6 +305,7 @@
    if( # hardware architecture supported?
       ((LIBOMP_ARCH STREQUAL x86_64) OR
        (LIBOMP_ARCH STREQUAL i386) OR
@@ -169,9 +169,9 @@ diff -ruN a/openmp/runtime/cmake/config-ix.cmake b/openmp/runtime/cmake/config-i
  #      (LIBOMP_ARCH STREQUAL arm) OR
        (LIBOMP_ARCH STREQUAL aarch64) OR
        (LIBOMP_ARCH STREQUAL aarch64_32) OR
-diff -ruN a/openmp/runtime/src/kmp.h b/openmp/runtime/src/kmp.h
---- a/openmp/runtime/src/kmp.h	2026-06-16 06:33:53.000000000 +0800
-+++ b/openmp/runtime/src/kmp.h	2026-07-11 09:00:53.135318130 +0800
+diff -ruN om-orig/llvm-project-23.1.5.src/openmp/runtime/src/kmp.h om-final/llvm-project-23.1.5.src/openmp/runtime/src/kmp.h
+--- a/openmp/runtime/src/kmp.h	2026-11-02 10:45:15.000000000 -0000
++++ b/openmp/runtime/src/kmp.h	2026-11-17 04:18:02.922569280 -0000
 @@ -29,7 +29,7 @@
  #endif
  #define KMP_WEIGHTED_ITERATIONS_SUPPORTED                                      \
@@ -181,7 +181,7 @@ diff -ruN a/openmp/runtime/src/kmp.h b/openmp/runtime/src/kmp.h
  
  #define TASK_CURRENT_NOT_QUEUED 0
  #define TASK_CURRENT_QUEUED 1
-@@ -108,7 +108,7 @@
+@@ -95,7 +95,7 @@
  #define KMP_HWLOC_ENABLED 0
  #endif
  
@@ -190,7 +190,7 @@ diff -ruN a/openmp/runtime/src/kmp.h b/openmp/runtime/src/kmp.h
  #include <xmmintrin.h>
  #endif
  
-@@ -523,7 +523,7 @@
+@@ -510,7 +510,7 @@
  #define KMP_FAST_REDUCTION_BARRIER 1
  
  #undef KMP_FAST_REDUCTION_CORE_DUO
@@ -199,7 +199,7 @@ diff -ruN a/openmp/runtime/src/kmp.h b/openmp/runtime/src/kmp.h
  #define KMP_FAST_REDUCTION_CORE_DUO 1
  #endif
  
-@@ -620,7 +620,7 @@
+@@ -607,7 +607,7 @@
  
  typedef enum kmp_hw_core_type_t {
    KMP_HW_CORE_TYPE_UNKNOWN = 0x0,
@@ -208,7 +208,7 @@ diff -ruN a/openmp/runtime/src/kmp.h b/openmp/runtime/src/kmp.h
    KMP_HW_CORE_TYPE_ATOM = 0x20,
    KMP_HW_CORE_TYPE_CORE = 0x40,
    KMP_HW_MAX_NUM_CORE_TYPES = 3,
-@@ -849,7 +849,7 @@
+@@ -836,7 +836,7 @@
  
  enum affinity_top_method {
    affinity_top_method_all = 0, // try all (supported) methods, in order
@@ -217,7 +217,7 @@ diff -ruN a/openmp/runtime/src/kmp.h b/openmp/runtime/src/kmp.h
    affinity_top_method_apicid,
    affinity_top_method_x2apicid,
    affinity_top_method_x2apicid_1f,
-@@ -1224,6 +1224,9 @@
+@@ -1212,6 +1212,9 @@
  #elif KMP_ARCH_X86_64
  #define KMP_DEFAULT_STKSIZE ((size_t)(4 * 1024 * 1024))
  #define KMP_BACKUP_STKSIZE ((size_t)(2 * 1024 * 1024))
@@ -227,7 +227,7 @@ diff -ruN a/openmp/runtime/src/kmp.h b/openmp/runtime/src/kmp.h
  #elif KMP_ARCH_VE
  // Minimum stack size for pthread for VE is 4MB.
  //   https://www.hpc.nec/documents/veos/en/glibc/Difference_Points_glibc.htm
-@@ -1282,7 +1285,7 @@
+@@ -1270,7 +1273,7 @@
  #else
  #define KMP_BLOCKTIME(team, tid)                                               \
    (get__bt_set(team, tid) ? get__blocktime(team, tid) : __kmp_dflt_blocktime)
@@ -236,7 +236,7 @@ diff -ruN a/openmp/runtime/src/kmp.h b/openmp/runtime/src/kmp.h
  // HW TSC is used to reduce overhead (clock tick instead of nanosecond).
  extern kmp_uint64 __kmp_ticks_per_msec;
  extern kmp_uint64 __kmp_ticks_per_usec;
-@@ -1335,7 +1338,7 @@
+@@ -1323,7 +1326,7 @@
  /* Minimum number of threads before switch to TLS gtid (experimentally
     determined) */
  /* josh TODO: what about OS X* tuning? */
@@ -245,7 +245,7 @@ diff -ruN a/openmp/runtime/src/kmp.h b/openmp/runtime/src/kmp.h
  #define KMP_TLS_GTID_MIN 5
  #else
  #define KMP_TLS_GTID_MIN INT_MAX
-@@ -1403,7 +1406,7 @@
+@@ -1391,7 +1394,7 @@
  #define KMP_NEXT_WAIT 512U /* susequent number of spin-tests */
  #endif
  
@@ -254,7 +254,7 @@ diff -ruN a/openmp/runtime/src/kmp.h b/openmp/runtime/src/kmp.h
  typedef struct kmp_cpuid {
    kmp_uint32 eax;
    kmp_uint32 ebx;
-@@ -3120,7 +3123,7 @@
+@@ -3108,7 +3111,7 @@
  // t_inline_argv. Historically, we have supported at least 96 bytes. Using a
  // larger value for more space between the primary write/worker read section and
  // read/write by all section seems to buy more performance on EPCC PARALLEL.
@@ -263,7 +263,7 @@ diff -ruN a/openmp/runtime/src/kmp.h b/openmp/runtime/src/kmp.h
  #define KMP_INLINE_ARGV_BYTES                                                  \
    (4 * CACHE_LINE -                                                            \
     ((3 * KMP_PTR_SKIP + 2 * sizeof(int) + 2 * sizeof(kmp_int8) +               \
-@@ -3174,7 +3177,7 @@
+@@ -3162,7 +3165,7 @@
    ompt_lw_taskteam_t *ompt_serialized_team_info;
  #endif
  
@@ -272,7 +272,7 @@ diff -ruN a/openmp/runtime/src/kmp.h b/openmp/runtime/src/kmp.h
    kmp_int8 t_fp_control_saved;
    kmp_int8 t_pad2b;
    kmp_int16 t_x87_fpu_control_word; // FP control regs
-@@ -3205,7 +3208,7 @@
+@@ -3193,7 +3196,7 @@
    omp_allocator_handle_t t_def_allocator; /* default allocator */
  
  // Read/write by workers as well
@@ -281,7 +281,7 @@ diff -ruN a/openmp/runtime/src/kmp.h b/openmp/runtime/src/kmp.h
    // Using CACHE_LINE=64 reduces memory footprint, but causes a big perf
    // regression of epcc 'parallel' and 'barrier' on fxe256lin01. This extra
    // padding serves to fix the performance of epcc 'parallel' and 'barrier' when
-@@ -3364,7 +3367,7 @@
+@@ -3352,7 +3355,7 @@
                                           placement info */
  extern int __kmp_storage_map_verbose_specified;
  
@@ -290,7 +290,7 @@ diff -ruN a/openmp/runtime/src/kmp.h b/openmp/runtime/src/kmp.h
  extern kmp_cpuinfo_t __kmp_cpuinfo;
  static inline bool __kmp_is_hybrid_cpu() { return __kmp_cpuinfo.flags.hybrid; }
  #elif KMP_OS_DARWIN && KMP_ARCH_AARCH64
-@@ -3529,7 +3532,7 @@
+@@ -3517,7 +3520,7 @@
  #endif
  extern int __kmp_tls_gtid_min; /* #threads below which use sp search for gtid */
  extern int __kmp_foreign_tp; // If true, separate TP var for each foreign thread
@@ -299,18 +299,18 @@ diff -ruN a/openmp/runtime/src/kmp.h b/openmp/runtime/src/kmp.h
  extern int __kmp_inherit_fp_control; // copy fp creg(s) parent->workers at fork
  extern kmp_int16 __kmp_init_x87_fpu_control_word; // init thread's FP ctrl reg
  extern kmp_uint32 __kmp_init_mxcsr; /* init thread's mxscr */
-@@ -3901,7 +3904,7 @@
+@@ -3889,7 +3892,7 @@
  extern void __kmp_expand_host_name(char *buffer, size_t size);
  extern void __kmp_expand_file_name(char *result, size_t rlen, char *pattern);
  
--#if KMP_ARCH_X86 || KMP_ARCH_X86_64 || (KMP_OS_WINDOWS && (KMP_ARCH_AARCH64 || KMP_ARCH_ARM))
-+#if KMP_ARCH_X86 || KMP_ARCH_X86_64 || KMP_ARCH_X86_X32 || (KMP_OS_WINDOWS && (KMP_ARCH_AARCH64 || KMP_ARCH_ARM))
+-#if KMP_ARCH_X86 || KMP_ARCH_X86_64 ||                                         \
++#if KMP_ARCH_X86 || KMP_ARCH_X86_64 || KMP_ARCH_X86_X32 ||                     \
+     (KMP_OS_WINDOWS && (KMP_ARCH_AARCH64 || KMP_ARCH_ARM || KMP_ARCH_ARM64EC))
  extern void
  __kmp_initialize_system_tick(void); /* Initialize timer tick value */
- #endif
-diff -ruN a/openmp/runtime/src/kmp_affinity.cpp b/openmp/runtime/src/kmp_affinity.cpp
---- a/openmp/runtime/src/kmp_affinity.cpp	2026-06-16 06:33:53.000000000 +0800
-+++ b/openmp/runtime/src/kmp_affinity.cpp	2026-07-11 09:00:53.135318130 +0800
+diff -ruN om-orig/llvm-project-23.1.5.src/openmp/runtime/src/kmp_affinity.cpp om-final/llvm-project-23.1.5.src/openmp/runtime/src/kmp_affinity.cpp
+--- a/openmp/runtime/src/kmp_affinity.cpp	2026-11-02 10:45:15.000000000 -0000
++++ b/openmp/runtime/src/kmp_affinity.cpp	2026-11-17 04:18:02.899237118 -0000
 @@ -174,7 +174,7 @@
    case KMP_HW_CORE_TYPE_UNKNOWN:
    case KMP_HW_MAX_NUM_CORE_TYPES:
@@ -374,9 +374,9 @@ diff -ruN a/openmp/runtime/src/kmp_affinity.cpp b/openmp/runtime/src/kmp_affinit
    else if (__kmp_affinity_top_method == affinity_top_method_x2apicid ||
             __kmp_affinity_top_method == affinity_top_method_x2apicid_1f) {
      success = __kmp_affinity_create_x2apicid_map(&msg_id);
-diff -ruN a/openmp/runtime/src/kmp_affinity.h b/openmp/runtime/src/kmp_affinity.h
---- a/openmp/runtime/src/kmp_affinity.h	2026-06-16 06:33:53.000000000 +0800
-+++ b/openmp/runtime/src/kmp_affinity.h	2026-07-11 09:12:37.127079607 +0800
+diff -ruN om-orig/llvm-project-23.1.5.src/openmp/runtime/src/kmp_affinity.h om-final/llvm-project-23.1.5.src/openmp/runtime/src/kmp_affinity.h
+--- a/openmp/runtime/src/kmp_affinity.h	2026-11-02 10:45:15.000000000 -0000
++++ b/openmp/runtime/src/kmp_affinity.h	2026-11-17 04:18:02.899237118 -0000
 @@ -201,7 +201,18 @@
     all systems of the same arch where they are defined, and they cannot change.
     stone forever. */
@@ -415,9 +415,9 @@ diff -ruN a/openmp/runtime/src/kmp_affinity.h b/openmp/runtime/src/kmp_affinity.
  #elif KMP_ARCH_PPC64
  #ifndef __NR_sched_setaffinity
  #define __NR_sched_setaffinity 222
-diff -ruN a/openmp/runtime/src/kmp_atomic.cpp b/openmp/runtime/src/kmp_atomic.cpp
---- a/openmp/runtime/src/kmp_atomic.cpp	2026-06-16 06:33:53.000000000 +0800
-+++ b/openmp/runtime/src/kmp_atomic.cpp	2026-07-11 09:00:53.135318130 +0800
+diff -ruN om-orig/llvm-project-23.1.5.src/openmp/runtime/src/kmp_atomic.cpp om-final/llvm-project-23.1.5.src/openmp/runtime/src/kmp_atomic.cpp
+--- a/openmp/runtime/src/kmp_atomic.cpp	2026-11-02 10:45:15.000000000 -0000
++++ b/openmp/runtime/src/kmp_atomic.cpp	2026-11-17 04:18:02.899237118 -0000
 @@ -865,7 +865,7 @@
  
  #endif // KMP_OS_WINDOWS && (KMP_ARCH_AARCH64 || KMP_ARCH_ARM)
@@ -589,9 +589,9 @@ diff -ruN a/openmp/runtime/src/kmp_atomic.cpp b/openmp/runtime/src/kmp_atomic.cp
  
  // OpenMP 5.1 compare and swap
  
-diff -ruN a/openmp/runtime/src/kmp_atomic.h b/openmp/runtime/src/kmp_atomic.h
---- a/openmp/runtime/src/kmp_atomic.h	2026-06-16 06:33:53.000000000 +0800
-+++ b/openmp/runtime/src/kmp_atomic.h	2026-07-11 09:00:53.135318130 +0800
+diff -ruN om-orig/llvm-project-23.1.5.src/openmp/runtime/src/kmp_atomic.h om-final/llvm-project-23.1.5.src/openmp/runtime/src/kmp_atomic.h
+--- a/openmp/runtime/src/kmp_atomic.h	2026-11-02 10:45:15.000000000 -0000
++++ b/openmp/runtime/src/kmp_atomic.h	2026-11-17 04:18:02.899237118 -0000
 @@ -701,7 +701,7 @@
  
  // OpenMP 4.0: x = expr binop x for non-commutative operations.
@@ -610,9 +610,9 @@ diff -ruN a/openmp/runtime/src/kmp_atomic.h b/openmp/runtime/src/kmp_atomic.h
  char __kmpc_atomic_fixed1_sub_cpt_rev(ident_t *id_ref, int gtid, char *lhs,
                                        char rhs, int flag);
  char __kmpc_atomic_fixed1_div_cpt_rev(ident_t *id_ref, int gtid, char *lhs,
-diff -ruN a/openmp/runtime/src/kmp_csupport.cpp b/openmp/runtime/src/kmp_csupport.cpp
---- a/openmp/runtime/src/kmp_csupport.cpp	2026-06-16 06:33:53.000000000 +0800
-+++ b/openmp/runtime/src/kmp_csupport.cpp	2026-07-11 09:00:53.135318130 +0800
+diff -ruN om-orig/llvm-project-23.1.5.src/openmp/runtime/src/kmp_csupport.cpp om-final/llvm-project-23.1.5.src/openmp/runtime/src/kmp_csupport.cpp
+--- a/openmp/runtime/src/kmp_csupport.cpp	2026-11-02 10:45:15.000000000 -0000
++++ b/openmp/runtime/src/kmp_csupport.cpp	2026-11-17 04:18:02.902570284 -0000
 @@ -711,7 +711,7 @@
  
      /* return to the parallel section */
@@ -649,9 +649,9 @@ diff -ruN a/openmp/runtime/src/kmp_csupport.cpp b/openmp/runtime/src/kmp_csuppor
      // "fast" path implemented to fix customer performance issue
      kmp_tas_lock_t *tl = (kmp_tas_lock_t *)user_lock;
  #if USE_ITT_BUILD
-diff -ruN a/openmp/runtime/src/kmp_global.cpp b/openmp/runtime/src/kmp_global.cpp
---- a/openmp/runtime/src/kmp_global.cpp	2026-06-16 06:33:53.000000000 +0800
-+++ b/openmp/runtime/src/kmp_global.cpp	2026-07-11 09:00:53.135318130 +0800
+diff -ruN om-orig/llvm-project-23.1.5.src/openmp/runtime/src/kmp_global.cpp om-final/llvm-project-23.1.5.src/openmp/runtime/src/kmp_global.cpp
+--- a/openmp/runtime/src/kmp_global.cpp	2026-11-02 10:45:15.000000000 -0000
++++ b/openmp/runtime/src/kmp_global.cpp	2026-11-17 04:18:02.902570284 -0000
 @@ -18,7 +18,7 @@
  
  kmp_key_t __kmp_gtid_threadprivate_key;
@@ -670,9 +670,9 @@ diff -ruN a/openmp/runtime/src/kmp_global.cpp b/openmp/runtime/src/kmp_global.cp
  int __kmp_inherit_fp_control = TRUE;
  kmp_int16 __kmp_init_x87_fpu_control_word = 0;
  kmp_uint32 __kmp_init_mxcsr = 0;
-diff -ruN a/openmp/runtime/src/kmp_gsupport.cpp b/openmp/runtime/src/kmp_gsupport.cpp
---- a/openmp/runtime/src/kmp_gsupport.cpp	2026-06-16 06:33:53.000000000 +0800
-+++ b/openmp/runtime/src/kmp_gsupport.cpp	2026-07-11 09:22:32.563900855 +0800
+diff -ruN om-orig/llvm-project-23.1.5.src/openmp/runtime/src/kmp_gsupport.cpp om-final/llvm-project-23.1.5.src/openmp/runtime/src/kmp_gsupport.cpp
+--- a/openmp/runtime/src/kmp_gsupport.cpp	2026-11-02 10:45:15.000000000 -0000
++++ b/openmp/runtime/src/kmp_gsupport.cpp	2026-11-17 04:18:02.902570284 -0000
 @@ -357,7 +357,7 @@
  // They come in two flavors: 64-bit unsigned, and either 32-bit signed
  // (IA-32 architecture) or 64-bit signed (Intel(R) 64).
@@ -682,9 +682,21 @@ diff -ruN a/openmp/runtime/src/kmp_gsupport.cpp b/openmp/runtime/src/kmp_gsuppor
      KMP_ARCH_PPC || KMP_ARCH_AARCH64_32 || KMP_ARCH_SPARC32
  #define KMP_DISPATCH_INIT __kmp_aux_dispatch_init_4
  #define KMP_DISPATCH_FINI_CHUNK __kmp_aux_dispatch_fini_chunk_4
-diff -ruN a/openmp/runtime/src/kmp_itt.h b/openmp/runtime/src/kmp_itt.h
---- a/openmp/runtime/src/kmp_itt.h	2026-06-16 06:33:53.000000000 +0800
-+++ b/openmp/runtime/src/kmp_itt.h	2026-07-11 09:00:53.135318130 +0800
+diff -ruN om-orig/llvm-project-23.1.5.src/openmp/runtime/src/kmp_invoke_microtask.cpp om-final/llvm-project-23.1.5.src/openmp/runtime/src/kmp_invoke_microtask.cpp
+--- a/openmp/runtime/src/kmp_invoke_microtask.cpp	2026-11-02 10:45:15.000000000 -0000
++++ b/openmp/runtime/src/kmp_invoke_microtask.cpp	2026-11-17 04:37:11.784917839 -0000
+@@ -1,6 +1,7 @@
+ #include "kmp.h"
+ 
+-#if !(KMP_ARCH_X86 || KMP_ARCH_X86_64 || KMP_MIC || KMP_ARCH_AARCH64 ||        \
++#if !(KMP_ARCH_X86 || KMP_ARCH_X86_64 || KMP_ARCH_X86_X32 || KMP_MIC ||       \
++    KMP_ARCH_AARCH64 ||                                                     \
+       KMP_ARCH_PPC64 || KMP_ARCH_RISCV64 || KMP_ARCH_LOONGARCH64 ||            \
+       KMP_ARCH_ARM || KMP_ARCH_VE || KMP_ARCH_S390X || KMP_ARCH_PPC_XCOFF ||   \
+       KMP_ARCH_AARCH64_32)
+diff -ruN om-orig/llvm-project-23.1.5.src/openmp/runtime/src/kmp_itt.h om-final/llvm-project-23.1.5.src/openmp/runtime/src/kmp_itt.h
+--- a/openmp/runtime/src/kmp_itt.h	2026-11-02 10:45:15.000000000 -0000
++++ b/openmp/runtime/src/kmp_itt.h	2026-11-17 04:18:02.902570284 -0000
 @@ -165,11 +165,11 @@
     therefore uninteresting when collecting traces for architecture simulation.
   */
@@ -699,9 +711,9 @@ diff -ruN a/openmp/runtime/src/kmp_itt.h b/openmp/runtime/src/kmp_itt.h
  // Portable (at least for gcc and icc) code to insert the necessary instructions
  // to set %ebx and execute the unlikely no-op.
  #if defined(__INTEL_COMPILER)
-diff -ruN a/openmp/runtime/src/kmp_lock.cpp b/openmp/runtime/src/kmp_lock.cpp
---- a/openmp/runtime/src/kmp_lock.cpp	2026-06-16 06:33:53.000000000 +0800
-+++ b/openmp/runtime/src/kmp_lock.cpp	2026-07-11 09:00:53.135318130 +0800
+diff -ruN om-orig/llvm-project-23.1.5.src/openmp/runtime/src/kmp_lock.cpp om-final/llvm-project-23.1.5.src/openmp/runtime/src/kmp_lock.cpp
+--- a/openmp/runtime/src/kmp_lock.cpp	2026-11-02 10:45:15.000000000 -0000
++++ b/openmp/runtime/src/kmp_lock.cpp	2026-11-17 04:18:02.902570284 -0000
 @@ -2633,7 +2633,7 @@
  }
  
@@ -711,9 +723,9 @@ diff -ruN a/openmp/runtime/src/kmp_lock.cpp b/openmp/runtime/src/kmp_lock.cpp
  #define __kmp_tsc() __kmp_hardware_timestamp()
  // Runtime's default backoff parameters
  kmp_backoff_t __kmp_spin_backoff_params = {1, 4096, 100};
-diff -ruN a/openmp/runtime/src/kmp_lock.h b/openmp/runtime/src/kmp_lock.h
---- a/openmp/runtime/src/kmp_lock.h	2026-06-16 06:33:53.000000000 +0800
-+++ b/openmp/runtime/src/kmp_lock.h	2026-07-11 09:00:53.135318130 +0800
+diff -ruN om-orig/llvm-project-23.1.5.src/openmp/runtime/src/kmp_lock.h om-final/llvm-project-23.1.5.src/openmp/runtime/src/kmp_lock.h
+--- a/openmp/runtime/src/kmp_lock.h	2026-11-02 10:45:15.000000000 -0000
++++ b/openmp/runtime/src/kmp_lock.h	2026-11-17 04:18:02.905903449 -0000
 @@ -168,7 +168,7 @@
  #ifndef KMP_USE_FUTEX
  #define KMP_USE_FUTEX                                                          \
@@ -741,9 +753,9 @@ diff -ruN a/openmp/runtime/src/kmp_lock.h b/openmp/runtime/src/kmp_lock.h
  static inline int __kmp_test_nested_user_lock_with_checks(kmp_user_lock_p lck,
                                                            kmp_int32 gtid) {
    if (__kmp_user_lock_kind == lk_tas) {
-diff -ruN a/openmp/runtime/src/kmp_os.h b/openmp/runtime/src/kmp_os.h
---- a/openmp/runtime/src/kmp_os.h	2026-06-16 06:33:53.000000000 +0800
-+++ b/openmp/runtime/src/kmp_os.h	2026-07-11 09:00:53.135318130 +0800
+diff -ruN om-orig/llvm-project-23.1.5.src/openmp/runtime/src/kmp_os.h om-final/llvm-project-23.1.5.src/openmp/runtime/src/kmp_os.h
+--- a/openmp/runtime/src/kmp_os.h	2026-11-02 10:45:15.000000000 -0000
++++ b/openmp/runtime/src/kmp_os.h	2026-11-17 04:18:02.905903449 -0000
 @@ -97,7 +97,7 @@
  
  /* Check for quad-precision extension. */
@@ -793,7 +805,7 @@ diff -ruN a/openmp/runtime/src/kmp_os.h b/openmp/runtime/src/kmp_os.h
     !KMP_MIC)
  
  #if KMP_OS_WINDOWS
-@@ -719,7 +719,7 @@
+@@ -721,7 +721,7 @@
  #define KMP_XCHG_REAL64(p, v) __kmp_xchg_real64((p), (v));
  #endif
  
@@ -802,7 +814,7 @@ diff -ruN a/openmp/runtime/src/kmp_os.h b/openmp/runtime/src/kmp_os.h
  
  /* cast p to correct type so that proper intrinsic will be used */
  #define KMP_TEST_THEN_INC32(p)                                                 \
-@@ -1066,7 +1066,7 @@
+@@ -1068,7 +1068,7 @@
  #define KMP_MB() /* nothing to do */
  #endif
  
@@ -811,7 +823,7 @@ diff -ruN a/openmp/runtime/src/kmp_os.h b/openmp/runtime/src/kmp_os.h
  #if KMP_MIC
  // fence-style instructions do not exist, but lock; xaddl $0,(%rsp) can be used.
  // We shouldn't need it, though, since the ABI rules require that
-@@ -1200,7 +1200,7 @@
+@@ -1202,7 +1202,7 @@
  
  /* Workaround for Intel(R) 64 code gen bug when taking address of static array
   * (Intel(R) 64 Tracker #138) */
@@ -820,7 +832,7 @@ diff -ruN a/openmp/runtime/src/kmp_os.h b/openmp/runtime/src/kmp_os.h
  #define STATIC_EFI2_WORKAROUND
  #else
  #define STATIC_EFI2_WORKAROUND static
-@@ -1223,7 +1223,7 @@
+@@ -1225,7 +1225,7 @@
  // dynamic user lock is turned on
  #if KMP_USE_DYNAMIC_LOCK
  // Visual studio can't handle the asm sections in this code
@@ -829,7 +841,7 @@ diff -ruN a/openmp/runtime/src/kmp_os.h b/openmp/runtime/src/kmp_os.h
  #ifdef KMP_USE_ADAPTIVE_LOCKS
  #undef KMP_USE_ADAPTIVE_LOCKS
  #endif
-@@ -1233,7 +1233,7 @@
+@@ -1235,7 +1235,7 @@
  // Enable tick time conversion of ticks to seconds
  #if KMP_STATS_ENABLED
  #define KMP_HAVE_TICK_TIME                                                     \
@@ -838,9 +850,9 @@ diff -ruN a/openmp/runtime/src/kmp_os.h b/openmp/runtime/src/kmp_os.h
  #endif
  
  // Warning levels
-diff -ruN a/openmp/runtime/src/kmp_platform.h b/openmp/runtime/src/kmp_platform.h
---- a/openmp/runtime/src/kmp_platform.h	2026-06-16 06:33:53.000000000 +0800
-+++ b/openmp/runtime/src/kmp_platform.h	2026-07-11 09:18:57.408132413 +0800
+diff -ruN om-orig/llvm-project-23.1.5.src/openmp/runtime/src/kmp_platform.h om-final/llvm-project-23.1.5.src/openmp/runtime/src/kmp_platform.h
+--- a/openmp/runtime/src/kmp_platform.h	2026-11-02 10:45:15.000000000 -0000
++++ b/openmp/runtime/src/kmp_platform.h	2026-11-17 04:18:02.905903449 -0000
 @@ -117,6 +117,7 @@
  
  #define KMP_ARCH_X86 0
@@ -848,11 +860,11 @@ diff -ruN a/openmp/runtime/src/kmp_platform.h b/openmp/runtime/src/kmp_platform.
 +#define KMP_ARCH_X86_X32 0
  #define KMP_ARCH_AARCH64 0
  #define KMP_ARCH_AARCH64_32 0
- #define KMP_ARCH_PPC64_ELFv1 0
-@@ -134,8 +135,13 @@
- 
- #if KMP_OS_WINDOWS
- #if defined(_M_AMD64) || defined(__x86_64)
+ #define KMP_ARCH_ARM64EC 0
+@@ -138,8 +139,13 @@
+ #undef KMP_ARCH_ARM64EC
+ #define KMP_ARCH_ARM64EC 1
+ #elif defined(_M_AMD64) || defined(__x86_64)
 +#if defined(__ILP32__)
 +#undef KMP_ARCH_X86_X32
 +#define KMP_ARCH_X86_X32 1
@@ -863,7 +875,7 @@ diff -ruN a/openmp/runtime/src/kmp_platform.h b/openmp/runtime/src/kmp_platform.
  #elif defined(__aarch64__) || defined(_M_ARM64)
  #undef KMP_ARCH_AARCH64
  #define KMP_ARCH_AARCH64 1
-@@ -149,12 +155,18 @@
+@@ -153,12 +159,18 @@
  #endif
  
  #if KMP_OS_UNIX
@@ -883,7 +895,7 @@ diff -ruN a/openmp/runtime/src/kmp_platform.h b/openmp/runtime/src/kmp_platform.
  #elif defined __powerpc64__
  #if defined(_CALL_ELF)
  #if _CALL_ELF == 2
-@@ -279,15 +291,15 @@
+@@ -283,15 +295,15 @@
  
  /* Specify 32 bit architectures here */
  #define KMP_32_BIT_ARCH                                                        \
@@ -902,9 +914,9 @@ diff -ruN a/openmp/runtime/src/kmp_platform.h b/openmp/runtime/src/kmp_platform.
                KMP_ARCH_AARCH64 + KMP_ARCH_MIPS + KMP_ARCH_MIPS64 +             \
                KMP_ARCH_RISCV64 + KMP_ARCH_LOONGARCH64 + KMP_ARCH_VE +          \
                KMP_ARCH_S390X + KMP_ARCH_WASM + KMP_ARCH_PPC +                  \
-diff -ruN a/openmp/runtime/src/kmp_runtime.cpp b/openmp/runtime/src/kmp_runtime.cpp
---- a/openmp/runtime/src/kmp_runtime.cpp	2026-06-16 06:33:53.000000000 +0800
-+++ b/openmp/runtime/src/kmp_runtime.cpp	2026-07-11 09:00:53.135318130 +0800
+diff -ruN om-orig/llvm-project-23.1.5.src/openmp/runtime/src/kmp_runtime.cpp om-final/llvm-project-23.1.5.src/openmp/runtime/src/kmp_runtime.cpp
+--- a/openmp/runtime/src/kmp_runtime.cpp	2026-11-02 10:45:15.000000000 -0000
++++ b/openmp/runtime/src/kmp_runtime.cpp	2026-11-17 04:18:02.905903449 -0000
 @@ -1113,7 +1113,7 @@
    KMP_MB();
  }
@@ -957,11 +969,11 @@ diff -ruN a/openmp/runtime/src/kmp_runtime.cpp b/openmp/runtime/src/kmp_runtime.
 -#if KMP_ARCH_X86_64 || KMP_ARCH_PPC64 || KMP_ARCH_AARCH64 ||                   \
 +#if KMP_ARCH_X86_64 || KMP_ARCH_X86_X32 || KMP_ARCH_PPC64 || KMP_ARCH_AARCH64 || \
      KMP_ARCH_MIPS64 || KMP_ARCH_RISCV64 || KMP_ARCH_LOONGARCH64 ||             \
-     KMP_ARCH_VE || KMP_ARCH_S390X || KMP_ARCH_WASM
+     KMP_ARCH_VE || KMP_ARCH_S390X || KMP_ARCH_WASM || KMP_ARCH_ARM64EC
  
-diff -ruN a/openmp/runtime/src/kmp_settings.cpp b/openmp/runtime/src/kmp_settings.cpp
---- a/openmp/runtime/src/kmp_settings.cpp	2026-06-16 06:33:53.000000000 +0800
-+++ b/openmp/runtime/src/kmp_settings.cpp	2026-07-11 09:00:53.135318130 +0800
+diff -ruN om-orig/llvm-project-23.1.5.src/openmp/runtime/src/kmp_settings.cpp om-final/llvm-project-23.1.5.src/openmp/runtime/src/kmp_settings.cpp
+--- a/openmp/runtime/src/kmp_settings.cpp	2026-11-02 10:45:15.000000000 -0000
++++ b/openmp/runtime/src/kmp_settings.cpp	2026-11-17 04:18:02.905903449 -0000
 @@ -789,7 +789,7 @@
  // -----------------------------------------------------------------------------
  // KMP_INHERIT_FP_CONTROL
@@ -1025,9 +1037,9 @@ diff -ruN a/openmp/runtime/src/kmp_settings.cpp b/openmp/runtime/src/kmp_setting
      {"KMP_INHERIT_FP_CONTROL", __kmp_stg_parse_inherit_fp_control,
       __kmp_stg_print_inherit_fp_control, NULL, 0, 0},
  #endif /* KMP_ARCH_X86 || KMP_ARCH_X86_64 */
-diff -ruN a/openmp/runtime/src/kmp_stats.cpp b/openmp/runtime/src/kmp_stats.cpp
---- a/openmp/runtime/src/kmp_stats.cpp	2026-06-16 06:33:53.000000000 +0800
-+++ b/openmp/runtime/src/kmp_stats.cpp	2026-07-11 09:00:53.135318130 +0800
+diff -ruN om-orig/llvm-project-23.1.5.src/openmp/runtime/src/kmp_stats.cpp om-final/llvm-project-23.1.5.src/openmp/runtime/src/kmp_stats.cpp
+--- a/openmp/runtime/src/kmp_stats.cpp	2026-11-02 10:45:15.000000000 -0000
++++ b/openmp/runtime/src/kmp_stats.cpp	2026-11-17 04:18:02.909236616 -0000
 @@ -774,7 +774,7 @@
    fprintf(statsOut, "# Time of run: %s\n", &buffer[0]);
    if (gethostname(&hostName[0], sizeof(hostName)) == 0)
@@ -1037,9 +1049,9 @@ diff -ruN a/openmp/runtime/src/kmp_stats.cpp b/openmp/runtime/src/kmp_stats.cpp
    fprintf(statsOut, "# CPU:  %s\n", &__kmp_cpuinfo.name[0]);
    fprintf(statsOut, "# Family: %d, Model: %d, Stepping: %d\n",
            __kmp_cpuinfo.family, __kmp_cpuinfo.model, __kmp_cpuinfo.stepping);
-diff -ruN a/openmp/runtime/src/kmp_stats_timing.cpp b/openmp/runtime/src/kmp_stats_timing.cpp
---- a/openmp/runtime/src/kmp_stats_timing.cpp	2026-06-16 06:33:53.000000000 +0800
-+++ b/openmp/runtime/src/kmp_stats_timing.cpp	2026-07-11 09:00:53.135318130 +0800
+diff -ruN om-orig/llvm-project-23.1.5.src/openmp/runtime/src/kmp_stats_timing.cpp om-final/llvm-project-23.1.5.src/openmp/runtime/src/kmp_stats_timing.cpp
+--- a/openmp/runtime/src/kmp_stats_timing.cpp	2026-11-02 10:45:15.000000000 -0000
++++ b/openmp/runtime/src/kmp_stats_timing.cpp	2026-11-17 04:18:02.909236616 -0000
 @@ -28,7 +28,7 @@
    // pretty bad assumption of 1GHz clock for MIC
    return 1 / ((double)1000 * 1.e6);
@@ -1049,9 +1061,9 @@ diff -ruN a/openmp/runtime/src/kmp_stats_timing.cpp b/openmp/runtime/src/kmp_sta
  #include <string.h>
  // Extract the value from the CPUID information
  double tsc_tick_count::tick_time() {
-diff -ruN a/openmp/runtime/src/kmp_utility.cpp b/openmp/runtime/src/kmp_utility.cpp
---- a/openmp/runtime/src/kmp_utility.cpp	2026-06-16 06:33:53.000000000 +0800
-+++ b/openmp/runtime/src/kmp_utility.cpp	2026-07-11 09:00:53.135318130 +0800
+diff -ruN om-orig/llvm-project-23.1.5.src/openmp/runtime/src/kmp_utility.cpp om-final/llvm-project-23.1.5.src/openmp/runtime/src/kmp_utility.cpp
+--- a/openmp/runtime/src/kmp_utility.cpp	2026-11-02 10:45:15.000000000 -0000
++++ b/openmp/runtime/src/kmp_utility.cpp	2026-11-17 04:18:02.909236616 -0000
 @@ -18,7 +18,7 @@
  
  static const char *unknown = "unknown";
@@ -1061,9 +1073,9 @@ diff -ruN a/openmp/runtime/src/kmp_utility.cpp b/openmp/runtime/src/kmp_utility.
  
  /* NOTE: If called before serial_initialize (i.e. from runtime_initialize), then
     the debugging package has not been initialized yet, and only "0" will print
-diff -ruN a/openmp/runtime/src/z_Linux_asm.S b/openmp/runtime/src/z_Linux_asm.S
---- a/openmp/runtime/src/z_Linux_asm.S	2026-06-16 06:33:53.000000000 +0800
-+++ b/openmp/runtime/src/z_Linux_asm.S	2026-07-11 09:00:53.135318130 +0800
+diff -ruN om-orig/llvm-project-23.1.5.src/openmp/runtime/src/z_Linux_asm.S om-final/llvm-project-23.1.5.src/openmp/runtime/src/z_Linux_asm.S
+--- a/openmp/runtime/src/z_Linux_asm.S	2026-11-02 10:45:15.000000000 -0000
++++ b/openmp/runtime/src/z_Linux_asm.S	2026-11-17 04:18:02.909236616 -0000
 @@ -17,7 +17,7 @@
  
  #include "kmp_config.h"
@@ -1119,9 +1131,9 @@ diff -ruN a/openmp/runtime/src/z_Linux_asm.S b/openmp/runtime/src/z_Linux_asm.S
  
  // '
  #if KMP_ARCH_AARCH64 || KMP_ARCH_AARCH64_32
-diff -ruN a/openmp/runtime/src/z_Linux_util.cpp b/openmp/runtime/src/z_Linux_util.cpp
---- a/openmp/runtime/src/z_Linux_util.cpp	2026-06-16 06:33:53.000000000 +0800
-+++ b/openmp/runtime/src/z_Linux_util.cpp	2026-07-11 09:25:18.359089079 +0800
+diff -ruN om-orig/llvm-project-23.1.5.src/openmp/runtime/src/z_Linux_util.cpp om-final/llvm-project-23.1.5.src/openmp/runtime/src/z_Linux_util.cpp
+--- a/openmp/runtime/src/z_Linux_util.cpp	2026-11-02 10:45:15.000000000 -0000
++++ b/openmp/runtime/src/z_Linux_util.cpp	2026-11-17 04:18:02.909236616 -0000
 @@ -321,7 +321,7 @@
  
  #endif // KMP_USE_FUTEX
@@ -1163,12 +1175,3 @@ diff -ruN a/openmp/runtime/src/z_Linux_util.cpp b/openmp/runtime/src/z_Linux_uti
  /* Measure clock ticks per millisecond */
  void __kmp_initialize_system_tick() {
    kmp_uint64 now, nsec2, diff;
-@@ -2736,7 +2736,7 @@
- 
- #endif // USE_LOAD_BALANCE
- 
--#if !(KMP_ARCH_X86 || KMP_ARCH_X86_64 || KMP_MIC || KMP_ARCH_AARCH64 ||        \
-+#if !(KMP_ARCH_X86 || KMP_ARCH_X86_64 || KMP_ARCH_X86_X32 || KMP_MIC || KMP_ARCH_AARCH64 ||        \
-       KMP_ARCH_PPC64 || KMP_ARCH_RISCV64 || KMP_ARCH_LOONGARCH64 ||            \
-       KMP_ARCH_ARM || KMP_ARCH_VE || KMP_ARCH_S390X || KMP_ARCH_PPC_XCOFF ||   \
-       KMP_ARCH_AARCH64_32)

@@ -106,14 +106,13 @@ and `gentoo-x32-docker`) provide:
   the ebuild's default `eapply_user` sees nothing; the hook applies the patch
   manually, guarded by a per-`${PF}` marker file in `${T}` so the nested
   `src_prepare` chain cannot double-apply it (verified on jq).
-- **Version-agnostic symlinks**: `dev-lang/ruby -> ruby-3.3.11` delivers the
-  coroutine fix to `ruby-3.3.13`; verified by `ebuild ruby-3.3.13.ebuild
-  unpack prepare` applying the patch into `configure.ac`.
-- **OpenMP dedup** (md5-identical): `openmp-16.0.6`, `openmp-17.0.6` symlink to
-  `../openmp-15.0.7-r2/x32.patch`; `openmp-20.1.8` symlinks to
-  `../openmp-20.1.7/x32.patch`. Verified: `ebuild openmp-22.1.8.ebuild
-  unpack prepare` applies the (unique) patch — x32-aware `-mx32` flag selection
-  lands in `LibompHandleFlags.cmake`.
+- **Version-agnostic symlinks**: `dev-lang/ruby -> ruby-3.4.12` delivers the
+  coroutine fix to both `ruby-3.3.13` and `ruby-4.0.9`; verified by
+  `ebuild ... unpack prepare` applying the patch into `configure.ac`.
+- **OpenMP**: `llvm-runtimes/openmp -> openmp-23.1.5` carries the x32 runtime
+  patch (ILP32 support in `kmp_platform.h`, `-mx32` in
+  `LibompHandleFlags.cmake`, `x86_64_x32` arch in `runtime/CMakeLists.txt`).
+  Verified: `ebuild openmp-23.1.5.ebuild unpack prepare` applies it cleanly.
 - **`X32_GIT_PATCH=1`** creates a baseline commit (`x32 baseline <PF>`) in a
   transient git repo inside `${S}` for `git diff`-based patch development
   (verified on jq).

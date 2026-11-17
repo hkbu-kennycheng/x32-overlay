@@ -1,6 +1,6 @@
---- a/configure.ac
-+++ b/configure.ac
-@@ -2745,6 +2745,20 @@
+--- a/configure.ac	2026-10-23 03:17:41.000000000 -0000
++++ b/configure.ac	2026-11-17 04:11:59.830801770 -0000
+@@ -2742,6 +2742,20 @@
      AC_MSG_CHECKING(native coroutine implementation for ${target_cpu}-${target_os})
      AC_MSG_RESULT(${coroutine_type})
  ])

@@ -1,6 +1,6 @@
---- a/Source/WTF/wtf/PlatformCPU.h
-+++ b/Source/WTF/wtf/PlatformCPU.h
-@@ -105,8 +105,8 @@
+--- a/Source/WTF/wtf/PlatformCPU.h	2026-07-24 08:02:54.125865700 -0000
++++ b/Source/WTF/wtf/PlatformCPU.h	2026-11-17 04:13:17.020258539 -0000
+@@ -111,8 +111,8 @@
  #endif
  
  /* CPU(X86_64) - AMD64 / Intel64 / x86_64 64-bit */
@@ -11,9 +11,9 @@
  #define WTF_CPU_X86_64 1
  #define WTF_CPU_X86_SSE2 1
  #define WTF_CPU_KNOWN 1
---- a/Source/cmake/WebKitCommon.cmake
-+++ b/Source/cmake/WebKitCommon.cmake
-@@ -90,6 +90,8 @@ if (NOT HAS_RUN_WEBKIT_COMMON)
+--- a/Source/cmake/WebKitCommon.cmake	2026-08-16 07:24:52.350831000 -0000
++++ b/Source/cmake/WebKitCommon.cmake	2026-11-17 04:13:17.020258539 -0000
+@@ -168,6 +168,8 @@
          set(WTF_CPU_MIPS64 1)
      elseif (LOWERCASE_CMAKE_SYSTEM_PROCESSOR MATCHES "^mips")
          set(WTF_CPU_MIPS 1)

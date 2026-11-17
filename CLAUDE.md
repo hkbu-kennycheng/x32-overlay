@@ -34,7 +34,20 @@ profiles/x32/               # x32 profile: eapi, package.mask/, package.use/, pa
 
 - `package.mask/` — masks: `>x11-themes/adwaita-icon-theme-3.32.0`, `<dev-lang/ruby-3.3.0`
 - `package.use/` — keyword-specific USE flags (cairo/libglvnd `X`, freetype `harfbuzz`, libaom SIMD off)
-- `patches/` — x32 user patches in `eapply_user` layout: `patches/<category>/<pkg-version>/x32.patch`. Version-agnostic symlinks (e.g. `app-misc/jq` -> `jq-1.8.2`) keep minor `::gentoo` bumps working.
+- `patches/` — x32 user patches in `eapply_user` layout: `patches/<category>/<pkg-version>/x32.patch`. Version-agnostic symlinks (e.g. `app-misc/jq` -> `jq-1.8.2`) keep minor `::gentoo` bumps working. Current patch set (2026-11):
+
+  | Patch dir | Fix |
+  |---|---|
+  | `app-misc/jq-1.8.2` | `_FILE_OFFSET_BITS`/`_TIME_BITS` 64 on ILP32 (guarded by `!__ILP32__`) |
+  | `dev-lang/ruby-3.3.13`, `ruby-3.4.12` | force `ucontext` coroutine backend on x32 (ebuild forces `amd64`) |
+  | `dev-build/b2-5.6.1` | add `libx32` to gcc lib path, `-mx32` for 32-bit ELF x86 |
+  | `dev-util/android-tools-35.0.2` (fipsmodule), `-36.0.1` (crypto/rand) | x32 `getrandom` syscall number (`0x40000000 + 318`) |
+  | `gui-libs/gtk-4.18.6`, `gtk-4.20.4`, `gtk-4.22.5` | disable roaring `x64` SIMD path on `__ILP32__` |
+  | `llvm-runtimes/openmp-23.1.5` | x32 (ILP32) runtime support; full port of the former 22.1.8 patch |
+  | `net-libs/webkit-gtk-2.54.2` | drop `WTF_CPU_X86_64`, mark `WTF_CPU_UNKNOWN` on `ELF X32` |
+  | `dev-debug/gdb-17.2` | skip `si_addr_bnd` fields on x32 (`!__ILP32__`) |
+
+  `dev-libs/boost` needs no patch: upstream ≥1.80 ships `X86_64/SYSV/X32` context aliases in `libs/context/build/Jamfile.v2`.
 - `profile.bashrc`:
   - `pre_src_prepare` applies `${CATEGORY}/${P}` and `${CATEGORY}/${PN}`
     patches directly when `/etc/portage/patches` does not resolve to the
@@ -162,8 +175,21 @@ All of the following were verified end-to-end in the `x32-dev-verify` container
   `gentoolkit`/`pkgdev`/`pkgcheck` installed.
 - **Patch pipeline**: `eapply_user` (with `/etc/portage/patches` symlinked) and
   the `profile.bashrc` fallback (symlink absent) each apply `x32.patch` exactly
-  once; verified on `jq-1.8.2`, `ruby-3.3.13` (via the version-agnostic
-  `dev-lang/ruby` symlink), and `openmp-22.1.8`.
+  once; verified on `jq-1.8.2`, `ruby-3.3.13` / `ruby-4.0.9` (via the
+  version-agnostic `dev-lang/ruby` symlink), `b2-5.6.1`, `gtk-4.18.6-r1` /
+  `gtk-4.22.5-r1`, `android-tools-35.0.2` / `-36.0.1`, `gdb-17.2-r1`,
+  `webkit-gtk-2.54.2` and `openmp-23.1.5`.
+- **Patch-set refresh (2026-11)**: obsolete per-version dirs (`ruby-3.3.11`,
+  `boost-1.80.0-r1`, `boost-build`, `openmp-15.0.7-r2` through `openmp-22.1.8`,
+  plus the `b2`/`boost-build`/`sys-devel/gdb` pseudo-dirs) were replaced with
+  patches regenerated against current `::gentoo` versions; `dev-libs/boost`
+  no longer needs a patch (1.80+ ships upstream x32 context aliases), and
+  `boosting b2` patches apply to both `b2-5.4.2-r1` (stable) and `b2-5.6.1`.
+  Full builds succeeding with the patched sources: `jq-1.8.2`, `b2-5.4.2-r1`,
+  `b2-5.6.1`, `gtk-4.18.6-r1`, `gtk-4.22.5-r1`, `android-tools-36.0.1`,
+  `gdb-17.2-r1` and `openmp-23.1.5` (runtime-tested with a `-fopenmp`
+  reduction program; `openmp-23.1.5` needed a `kmp_invoke_microtask.cpp`
+  guard so the x32 asm path is not double-defined).
 - **X32_GIT_PATCH=1**: baseline commit created in `${S}` (verified on jq).
 - **Profile selectability**: `eselect profile list` shows `x32-overlay:x32`
   (stable, inherits the Gentoo x32 systemd profile).

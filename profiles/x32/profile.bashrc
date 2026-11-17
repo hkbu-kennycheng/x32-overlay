@@ -45,12 +45,14 @@ x32_apply_overlay_patches() {
 	local marker="${T}/.x32-overlay-patches"
 	[[ -f ${marker} && $(<"${marker}") == "${PF}" ]] && return 0
 
-	# Apply version-specific (${P}) then version-agnostic (${PN}) patch
-	# directories. Deduplicate by realpath: ${P} == ${PF} when
-	# PKG_REVISION is empty, and ${PN} is often a symlink to the
-	# versioned directory (e.g. app-misc/jq -> app-misc/jq-1.8.2).
+	# Apply version-specific (${P}, then ${P} without its release
+	# revision) and version-agnostic (${PN}) patch directories. A dir
+	# exists for every version carried by the overlay, so ${P} normally
+	# matches; ${P%-r*} maps revisions (gtk-4.20.4-r1, gdb-17.2-r1) to
+	# the base-version dir. Deduplicate by realpath.
 	local d r f seen=()
 	for d in "${patches_src}/${CATEGORY}/${P}" \
+		 "${patches_src}/${CATEGORY}/${P%-r*}" \
 		 "${patches_src}/${CATEGORY}/${PN}"; do
 		[[ -d ${d} ]] || continue
 		r=$(realpath "${d}" 2>/dev/null) || r=${d}

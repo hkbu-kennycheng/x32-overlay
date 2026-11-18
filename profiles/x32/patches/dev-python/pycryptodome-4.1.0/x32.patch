@@ -1,0 +1,21 @@
+Disable the BMI2/ADX inline-assembly kernel on the x32 (ILP32) ABI.
+
+nat_mod.c's addmul_row() uses int64_t index operands in 64-bit addressing
+modes; on x32 GCC allocates 32-bit GPRs (%eax/%r11d) and the assembler
+rejects them ("not a valid base/index expression"). The plain C path used
+for 32-bit targets is correct for x32, so make the compile probe decline
+the kernel.
+
+--- a/compiler_opt.py
++++ b/compiler_opt.py
+@@ -336,8 +336,8 @@
+ 
+     source = """
+     #include <stdint.h>
+-    #if !defined(__x86_64__)
+-    #error Only for x86-64
++    #if !defined(__x86_64__) || defined(__ILP32__)
++    #error Only for 64-bit x86-64 (not the x32 ILP32 ABI)
+     #endif
+     int main(void) {
+         uint64_t lo, hi, x = 3, y = 5;

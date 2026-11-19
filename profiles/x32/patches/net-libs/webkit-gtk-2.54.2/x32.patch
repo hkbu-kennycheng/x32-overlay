@@ -1,5 +1,5 @@
---- a/Source/WTF/wtf/PlatformCPU.h	2026-07-24 08:02:54.125865700 -0000
-+++ b/Source/WTF/wtf/PlatformCPU.h	2026-11-17 11:04:11.374047588 -0000
+--- a/Source/WTF/wtf/PlatformCPU.h
++++ b/Source/WTF/wtf/PlatformCPU.h
 @@ -111,8 +111,8 @@
  #endif
  
@@ -11,9 +11,21 @@
  #define WTF_CPU_X86_64 1
  #define WTF_CPU_X86_SSE2 1
  #define WTF_CPU_KNOWN 1
---- a/Source/cmake/WebKitCommon.cmake	2026-08-16 07:24:52.350831000 -0000
-+++ b/Source/cmake/WebKitCommon.cmake	2026-11-17 11:04:11.374047588 -0000
-@@ -168,6 +168,8 @@
+
+--- a/Source/bmalloc/bmalloc/BPlatform.h
++++ b/Source/bmalloc/bmalloc/BPlatform.h
+@@ -470,6 +470,7 @@
+ 
+ #if ((BOS(DARWIN) || BOS(LINUX)) && \
+     !BUSE(MIMALLOC) && \
++    BCPU(ADDRESS64) && \
+     (BCPU(X86_64) || (BCPU(ARM64) && !defined(__ILP32__) && (!BPLATFORM(IOS_FAMILY) || BPLATFORM(IOS)))))
+ #define GIGACAGE_ENABLED 1
+ #else
+
+--- a/Source/cmake/WebKitCommon.cmake
++++ b/Source/cmake/WebKitCommon.cmake
+@@ -168,6 +168,8 @@ if (NOT HAS_RUN_WEBKIT_COMMON)
          set(WTF_CPU_MIPS64 1)
      elseif (LOWERCASE_CMAKE_SYSTEM_PROCESSOR MATCHES "^mips")
          set(WTF_CPU_MIPS 1)
